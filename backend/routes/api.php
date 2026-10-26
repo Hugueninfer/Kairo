@@ -1,11 +1,13 @@
 <?php
 
+use App\Enums\Permission;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Companies\CompanyController;
 use App\Http\Controllers\Api\V1\Companies\InvitationController;
 use App\Http\Controllers\Api\V1\Companies\MemberController;
+use App\Http\Controllers\Api\V1\Companies\RoleController;
 use App\Http\Controllers\Api\V1\HealthController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,18 +44,49 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::post('companies/{company}/switch', [CompanyController::class, 'switch'])->name('companies.switch');
 
         // Tudo daqui para baixo roda dentro da empresa ativa (TenantContext).
+        // Cada rota exige uma permissão do papel do usuário; o dono passa em todas.
         Route::middleware('tenant')->prefix('company')->name('company.')->group(function (): void {
             Route::get('/', [CompanyController::class, 'current'])->name('show');
-            Route::patch('/', [CompanyController::class, 'update'])->name('update');
+            Route::patch('/', [CompanyController::class, 'update'])
+                ->can(Permission::CompanyUpdate->value)
+                ->name('update');
 
-            Route::get('members', [MemberController::class, 'index'])->name('members.index');
-            Route::delete('members/{member}', [MemberController::class, 'destroy'])->name('members.destroy');
+            Route::get('members', [MemberController::class, 'index'])
+                ->can(Permission::MembersView->value)
+                ->name('members.index');
+            Route::put('members/{member}/role', [MemberController::class, 'updateRole'])
+                ->can(Permission::RolesManage->value)
+                ->name('members.role');
+            Route::delete('members/{member}', [MemberController::class, 'destroy'])
+                ->can(Permission::MembersRemove->value)
+                ->name('members.destroy');
 
-            Route::get('invitations', [InvitationController::class, 'index'])->name('invitations.index');
+            Route::get('invitations', [InvitationController::class, 'index'])
+                ->can(Permission::MembersInvite->value)
+                ->name('invitations.index');
             Route::post('invitations', [InvitationController::class, 'store'])
                 ->middleware('throttle:auth')
+                ->can(Permission::MembersInvite->value)
                 ->name('invitations.store');
-            Route::delete('invitations/{invitation}', [InvitationController::class, 'destroy'])->name('invitations.destroy');
+            Route::delete('invitations/{invitation}', [InvitationController::class, 'destroy'])
+                ->can(Permission::MembersInvite->value)
+                ->name('invitations.destroy');
+
+            Route::get('permissions', [RoleController::class, 'permissions'])
+                ->can(Permission::RolesManage->value)
+                ->name('permissions.index');
+            Route::get('roles', [RoleController::class, 'index'])
+                ->can(Permission::MembersView->value)
+                ->name('roles.index');
+            Route::post('roles', [RoleController::class, 'store'])
+                ->can(Permission::RolesManage->value)
+                ->name('roles.store');
+            Route::put('roles/{role}', [RoleController::class, 'update'])
+                ->can(Permission::RolesManage->value)
+                ->name('roles.update');
+            Route::delete('roles/{role}', [RoleController::class, 'destroy'])
+                ->can(Permission::RolesManage->value)
+                ->name('roles.destroy');
         });
     });
 });

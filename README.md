@@ -63,3 +63,10 @@ Route → Middleware → FormRequest → Controller → DTO → Service → Repo
 - **Repositories** (prettus/l5-repository) concentram todo o acesso ao banco.
 
 As regras de camada são checadas por testes de arquitetura em `backend/tests/Arch`.
+
+## Multi-tenant e permissões
+
+- Cada empresa é um tenant. A empresa ativa vem do header `X-Company-Id` (ULID) ou da última empresa escolhida, e o middleware `tenant` sempre confere se o usuário é membro.
+- Papéis e permissões usam spatie/laravel-permission em modo teams, com `company_id` como time. Toda empresa nasce com os papéis Dono, Administrador, Financeiro e Membro.
+- O catálogo de permissões fica no enum `App\Enums\Permission`. As rotas exigem a permissão com `->can(...)`, e o dono da empresa passa em todas.
+

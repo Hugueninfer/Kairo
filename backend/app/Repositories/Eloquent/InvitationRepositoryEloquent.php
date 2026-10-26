@@ -5,6 +5,7 @@ namespace App\Repositories\Eloquent;
 use App\Enums\InvitationStatus;
 use App\Models\Company;
 use App\Models\Invitation;
+use App\Models\Role;
 use App\Models\User;
 use App\Repositories\Contracts\InvitationRepository;
 use Illuminate\Database\Eloquent\Collection;
@@ -18,19 +19,20 @@ class InvitationRepositoryEloquent extends BaseRepository implements InvitationR
         return Invitation::class;
     }
 
-    public function createPending(Company $company, User $inviter, string $email, string $tokenHash): Invitation
+    public function createPending(Company $company, User $inviter, string $email, string $tokenHash, ?Role $role = null): Invitation
     {
         $invitation = new Invitation([
             'email' => $email,
             'token_hash' => $tokenHash,
             'invited_by' => $inviter->id,
+            'role_id' => $role?->id,
             'status' => InvitationStatus::Pending,
             'expires_at' => now()->addDays(self::EXPIRES_IN_DAYS),
         ]);
         $invitation->company()->associate($company);
         $invitation->save();
 
-        return $invitation->load('inviter');
+        return $invitation->load(['inviter', 'role']);
     }
 
     public function findPendingByTokenHash(string $tokenHash): ?Invitation
@@ -38,7 +40,7 @@ class InvitationRepositoryEloquent extends BaseRepository implements InvitationR
         /** @var Invitation|null */
         return Invitation::query()
             ->withoutGlobalScope('company')
-            ->with(['company', 'inviter'])
+            ->with(['company', 'inviter', 'role'])
             ->where('token_hash', $tokenHash)
             ->where('status', InvitationStatus::Pending)
             ->where('expires_at', '>', now())
@@ -52,7 +54,7 @@ class InvitationRepositoryEloquent extends BaseRepository implements InvitationR
 
         /** @var Collection<int, Invitation> $invitations */
         $invitations = $this->model
-            ->with('inviter')
+            ->with(['inviter', 'role'])
             ->where('status', InvitationStatus::Pending)
             ->latest()
             ->get();

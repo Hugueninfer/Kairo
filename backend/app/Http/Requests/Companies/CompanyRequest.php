@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Usado para criar (qualquer usuário logado) e editar (ver UpdateCompanyRequest).
+ * Usado para criar e editar a empresa. A permissão de editar é checada na rota.
  */
 class CompanyRequest extends FormRequest
 {

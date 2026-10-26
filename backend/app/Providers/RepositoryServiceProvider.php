@@ -4,9 +4,13 @@ namespace App\Providers;
 
 use App\Repositories\Contracts\CompanyRepository;
 use App\Repositories\Contracts\InvitationRepository;
+use App\Repositories\Contracts\PermissionRepository;
+use App\Repositories\Contracts\RoleRepository;
 use App\Repositories\Contracts\UserRepository;
 use App\Repositories\Eloquent\CompanyRepositoryEloquent;
 use App\Repositories\Eloquent\InvitationRepositoryEloquent;
+use App\Repositories\Eloquent\PermissionRepositoryEloquent;
+use App\Repositories\Eloquent\RoleRepositoryEloquent;
 use App\Repositories\Eloquent\UserRepositoryEloquent;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,5 +27,7 @@ class RepositoryServiceProvider extends ServiceProvider
         UserRepository::class => UserRepositoryEloquent::class,
         CompanyRepository::class => CompanyRepositoryEloquent::class,
         InvitationRepository::class => InvitationRepositoryEloquent::class,
+        RoleRepository::class => RoleRepositoryEloquent::class,
+        PermissionRepository::class => PermissionRepositoryEloquent::class,
     ];
 }

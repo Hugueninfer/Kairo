@@ -22,6 +22,7 @@ class InvitationResource extends JsonResource
             'status' => ['value' => $this->status->value, 'label' => $this->status->label()],
             'expires_at' => $this->expires_at->toIso8601String(),
             'invited_by' => $this->whenLoaded('inviter', fn () => $this->inviter->name),
+            'role' => $this->whenLoaded('role', fn () => $this->role === null ? null : ['id' => $this->role->id, 'name' => $this->role->name]),
         ];
     }
 }

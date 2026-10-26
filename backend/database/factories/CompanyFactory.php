@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Company;
 use App\Models\User;
+use App\Services\Companies\RoleService;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -25,12 +26,13 @@ class CompanyFactory extends Factory
     }
 
     /**
-     * O dono também entra como membro, como acontece no cadastro real.
+     * O dono também entra como membro e a empresa ganha os papéis padrão, como no cadastro real.
      */
     public function configure(): static
     {
         return $this->afterCreating(function (Company $company): void {
             $company->members()->syncWithoutDetaching([$company->owner_id]);
+            app(RoleService::class)->setupCompany($company, $company->owner);
         });
     }
 }

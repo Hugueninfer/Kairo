@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\User;
 use App\Repositories\Contracts\CompanyRepository;
 use App\Repositories\Contracts\UserRepository;
+use App\Support\Transactions\TransactionManager;
 use Illuminate\Database\Eloquent\Collection;
 
 class MembershipService
@@ -15,6 +16,8 @@ class MembershipService
     public function __construct(
         private readonly CompanyRepository $companies,
         private readonly UserRepository $users,
+        private readonly RoleService $roles,
+        private readonly TransactionManager $transaction,
     ) {}
 
     /**
@@ -35,10 +38,13 @@ class MembershipService
             throw new NotCompanyMemberException;
         }
 
-        $this->companies->removeMember($company, $member);
+        $this->transaction->run(function () use ($company, $member): void {
+            $this->roles->revoke($member, $company);
+            $this->companies->removeMember($company, $member);
 
-        if ($member->current_company_id === $company->id) {
-            $this->users->setCurrentCompany($member, null);
-        }
+            if ($member->current_company_id === $company->id) {
+                $this->users->setCurrentCompany($member, null);
+            }
+        });
     }
 }

@@ -56,6 +56,7 @@ class CompanyRepositoryEloquent extends BaseRepository implements CompanyReposit
 
     public function members(Company $company): Collection
     {
-        return $company->members()->orderBy('name')->get();
+        // Os papéis vêm do time atual do spatie (a empresa ativa).
+        return $company->members()->with('roles')->orderBy('name')->get();
     }
 }

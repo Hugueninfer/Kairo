@@ -1,7 +1,10 @@
 <?php
 
+use App\Enums\SystemRole;
 use App\Models\Company;
+use App\Models\Role;
 use App\Models\User;
+use App\Services\Companies\RoleService;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)->in('Feature');
@@ -29,13 +32,24 @@ function ownerWithCompany(): array
 }
 
 /**
- * Adiciona um membro comum à empresa e já deixa a empresa como ativa para ele.
+ * Adiciona um membro à empresa (por padrão com o papel "Membro") e já deixa a empresa como ativa para ele.
  */
-function memberOf(Company $company): User
+function memberOf(Company $company, SystemRole|Role $role = SystemRole::Member): User
 {
     $member = User::factory()->create();
     $company->members()->attach($member->id);
     $member->forceFill(['current_company_id' => $company->id])->save();
 
+    $role = $role instanceof Role ? $role : roleOf($company, $role);
+    app(RoleService::class)->assignOnJoin($member, $company, $role);
+
     return $member;
+}
+
+function roleOf(Company $company, SystemRole $key): Role
+{
+    return Role::query()
+        ->where('company_id', $company->id)
+        ->where('system_key', $key)
+        ->firstOrFail();
 }

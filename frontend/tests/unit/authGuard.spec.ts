@@ -48,4 +48,27 @@ describe('authGuard', () => {
 
     expect(await authGuard(routeTo('/', { requiresAuth: true, requiresCompany: true }))).toEqual({ name: 'company-create' })
   })
+
+  it('não abre tela da empresa sem a permissão exigida', async () => {
+    vi.spyOn(companiesApi, 'list').mockResolvedValue([
+      {
+        id: 'a',
+        name: 'Alfa',
+        document: null,
+        currency: 'BRL',
+        timezone: 'America/Sao_Paulo',
+        default_hourly_rate: null,
+        is_owner: false,
+        is_current: true,
+      },
+    ])
+    vi.spyOn(companiesApi, 'access').mockResolvedValue({ role: { id: 2, name: 'Membro' }, permissions: ['members.view'] })
+    const auth = useAuthStore()
+    auth.user = { id: 1, name: 'Ana', email: 'a@k.test', email_verified: true, created_at: null }
+    auth.loaded = true
+    const meta = { requiresAuth: true, requiresCompany: true }
+
+    expect(await authGuard(routeTo('/empresa/papeis', { ...meta, permission: 'roles.manage' }))).toEqual({ name: 'dashboard' })
+    expect(await authGuard(routeTo('/empresa', meta))).toBe(true)
+  })
 })

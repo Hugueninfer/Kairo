@@ -6,6 +6,8 @@ declare module 'vue-router' {
   interface RouteMeta {
     requiresAuth?: boolean
     requiresCompany?: boolean
+    /** Permissão da empresa ativa exigida para abrir a tela. */
+    permission?: string
     guestOnly?: boolean
   }
 }
@@ -22,6 +24,12 @@ export const routes: RouteRecordRaw[] = [
     name: 'company-settings',
     component: () => import('@/views/companies/CompanySettingsView.vue'),
     meta: { requiresAuth: true, requiresCompany: true },
+  },
+  {
+    path: '/empresa/papeis',
+    name: 'company-roles',
+    component: () => import('@/views/companies/RolesView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'roles.manage' },
   },
   {
     path: '/empresas/nova',
@@ -63,7 +71,8 @@ export const routes: RouteRecordRaw[] = [
 
 /**
  * Protege as rotas: visitante vai para o login; logado não vê telas de visitante;
- * telas da empresa exigem uma empresa ativa (senão, vai criar a primeira).
+ * telas da empresa exigem uma empresa ativa (senão, vai criar a primeira) e, quando
+ * pedem, uma permissão do papel do usuário.
  */
 export async function authGuard(to: RouteLocationNormalized) {
   const auth = useAuthStore()
@@ -89,6 +98,10 @@ export async function authGuard(to: RouteLocationNormalized) {
 
     if (!company.current) {
       return { name: 'company-create' }
+    }
+
+    if (to.meta.permission && !company.can(to.meta.permission)) {
+      return { name: 'dashboard' }
     }
   }
 
