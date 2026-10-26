@@ -3,6 +3,11 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCompanyStore } from '@/stores/company'
 
+defineProps<{
+  /** Telas largas, como o quadro de tarefas. */
+  wide?: boolean
+}>()
+
 const auth = useAuthStore()
 const company = useCompanyStore()
 const router = useRouter()
@@ -28,11 +33,13 @@ async function logout() {
 <template>
   <div class="min-h-screen">
     <header class="border-b border-slate-200 bg-white">
-      <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+      <div class="mx-auto flex flex-wrap items-center justify-between gap-3 px-4 py-3" :class="wide ? 'max-w-7xl' : 'max-w-5xl'">
         <div class="flex items-center gap-6">
           <RouterLink to="/" class="text-lg font-bold text-brand-600">Kairo</RouterLink>
           <nav class="flex gap-4 text-sm text-slate-600">
             <RouterLink to="/" class="hover:text-brand-600" active-class="font-semibold text-brand-600" exact-active-class="font-semibold text-brand-600">Painel</RouterLink>
+            <RouterLink v-if="company.can('projects.view')" to="/projetos" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Projetos</RouterLink>
+            <RouterLink v-if="company.can('clients.view')" to="/clientes" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Clientes</RouterLink>
             <RouterLink to="/empresa" class="hover:text-brand-600" exact-active-class="font-semibold text-brand-600">Empresa</RouterLink>
             <RouterLink v-if="company.can('roles.manage')" to="/empresa/papeis" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Papéis</RouterLink>
           </nav>
@@ -55,7 +62,7 @@ async function logout() {
       </div>
     </header>
 
-    <main class="mx-auto max-w-5xl space-y-4 px-4 py-8">
+    <main class="mx-auto space-y-4 px-4 py-8" :class="wide ? 'max-w-7xl' : 'max-w-5xl'">
       <slot />
     </main>
   </div>
