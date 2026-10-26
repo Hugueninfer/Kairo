@@ -28,11 +28,17 @@ export interface Company {
   is_current: boolean
 }
 
+export interface RoleRef {
+  id: number
+  name: string
+}
+
 export interface Member {
   id: number
   name: string
   email: string
   is_owner: boolean
+  role: RoleRef | null
 }
 
 export interface Invitation {
@@ -41,6 +47,29 @@ export interface Invitation {
   status: { value: string; label: string }
   expires_at: string
   invited_by?: string
+  role?: RoleRef | null
+}
+
+/** Papel da empresa. O de dono (is_locked) sempre tem tudo e não pode ser editado. */
+export interface Role {
+  id: number
+  name: string
+  system_key: 'owner' | 'admin' | 'finance' | 'member' | null
+  is_system: boolean
+  is_locked: boolean
+  permissions: string[]
+  members_count: number
+}
+
+export interface PermissionGroup {
+  group: string
+  permissions: { key: string; label: string }[]
+}
+
+/** Papel e permissões de quem está logado na empresa ativa. */
+export interface CompanyAccess {
+  role: RoleRef | null
+  permissions: string[]
 }
 
 export interface InvitationPreview {

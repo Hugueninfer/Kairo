@@ -33,7 +33,8 @@ async function logout() {
           <RouterLink to="/" class="text-lg font-bold text-brand-600">Kairo</RouterLink>
           <nav class="flex gap-4 text-sm text-slate-600">
             <RouterLink to="/" class="hover:text-brand-600" active-class="font-semibold text-brand-600" exact-active-class="font-semibold text-brand-600">Painel</RouterLink>
-            <RouterLink to="/empresa" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Empresa</RouterLink>
+            <RouterLink to="/empresa" class="hover:text-brand-600" exact-active-class="font-semibold text-brand-600">Empresa</RouterLink>
+            <RouterLink v-if="company.can('roles.manage')" to="/empresa/papeis" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Papéis</RouterLink>
           </nav>
         </div>
         <div class="flex items-center gap-4 text-sm">

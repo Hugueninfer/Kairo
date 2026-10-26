@@ -12,6 +12,7 @@ use App\Notifications\Companies\InvitationNotification;
 use App\Repositories\Contracts\CompanyRepository;
 use App\Repositories\Contracts\InvitationRepository;
 use App\Repositories\Contracts\UserRepository;
+use App\Support\Transactions\TransactionManager;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
@@ -22,6 +23,8 @@ class InvitationService
         private readonly InvitationRepository $invitations,
         private readonly CompanyRepository $companies,
         private readonly UserRepository $users,
+        private readonly RoleService $roles,
+        private readonly TransactionManager $transaction,
     ) {}
 
     /**
@@ -34,10 +37,16 @@ class InvitationService
 
     /**
      * Convida por e-mail. Um convite anterior pendente para o mesmo e-mail é cancelado,
-     * para existir só um link válido por pessoa.
+     * para existir só um link válido por pessoa. Sem papel escolhido, a pessoa entra como membro.
      */
-    public function invite(Company $company, User $inviter, string $email): Invitation
+    public function invite(Company $company, User $inviter, string $email, ?int $roleId = null): Invitation
     {
+        $role = $roleId === null ? null : $this->roles->find($company, $roleId);
+
+        if ($role !== null) {
+            $this->roles->ensureAssignable($company, $role);
+        }
+
         $existing = $this->users->findByEmail($email);
 
         if ($existing !== null && $this->companies->isMember($company, $existing)) {
@@ -47,7 +56,7 @@ class InvitationService
         $this->invitations->revokePendingForEmail($email);
 
         $token = Str::random(64);
-        $invitation = $this->invitations->createPending($company, $inviter, $email, $this->hash($token));
+        $invitation = $this->invitations->createPending($company, $inviter, $email, $this->hash($token), $role);
 
         Notification::route('mail', $email)->notify(new InvitationNotification(
             companyName: $company->name,
@@ -82,9 +91,12 @@ class InvitationService
 
         $company = $invitation->company;
 
-        $this->companies->addMember($company, $user);
-        $this->invitations->markAccepted($invitation);
-        $this->users->setCurrentCompany($user, $company);
+        $this->transaction->run(function () use ($invitation, $company, $user): void {
+            $this->companies->addMember($company, $user);
+            $this->roles->assignOnJoin($user, $company, $invitation->role);
+            $this->invitations->markAccepted($invitation);
+            $this->users->setCurrentCompany($user, $company);
+        });
 
         return $company;
     }

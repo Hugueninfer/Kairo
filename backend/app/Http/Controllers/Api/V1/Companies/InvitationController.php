@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1\Companies;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Companies\InviteMemberRequest;
-use App\Http\Requests\Companies\ManageMembersRequest;
 use App\Http\Resources\CompanyResource;
 use App\Http\Resources\InvitationPreviewResource;
 use App\Http\Resources\InvitationResource;
@@ -21,7 +20,7 @@ class InvitationController extends Controller
 {
     public function __construct(private readonly InvitationService $invitations) {}
 
-    public function index(ManageMembersRequest $request): AnonymousResourceCollection
+    public function index(): AnonymousResourceCollection
     {
         return InvitationResource::collection($this->invitations->pending());
     }
@@ -31,12 +30,12 @@ class InvitationController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $invitation = $this->invitations->invite($tenant->company(), $user, $request->email());
+        $invitation = $this->invitations->invite($tenant->company(), $user, $request->email(), $request->roleId());
 
         return InvitationResource::make($invitation)->response()->setStatusCode(201);
     }
 
-    public function destroy(ManageMembersRequest $request, Invitation $invitation): Response
+    public function destroy(Invitation $invitation): Response
     {
         $this->invitations->revoke($invitation);
 

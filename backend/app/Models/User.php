@@ -14,13 +14,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasRoles, Notifiable;
+
+    /**
+     * Guard dos papéis e permissões. Fixo em "web" porque o Sanctum troca o guard padrão
+     * durante a requisição, e a sessão do SPA é a do guard web.
+     */
+    public const PERMISSION_GUARD = 'web';
+
+    protected string $guard_name = self::PERMISSION_GUARD;
 
     /**
      * @return BelongsToMany<Company, $this>

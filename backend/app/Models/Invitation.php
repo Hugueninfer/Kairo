@@ -18,7 +18,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $expires_at
  * @property Carbon|null $accepted_at
  */
-#[Fillable(['email', 'token_hash', 'invited_by', 'status', 'expires_at', 'accepted_at'])]
+#[Fillable(['email', 'token_hash', 'invited_by', 'role_id', 'status', 'expires_at', 'accepted_at'])]
 #[Hidden(['token_hash'])]
 class Invitation extends Model
 {
@@ -56,6 +56,14 @@ class Invitation extends Model
     public function inviter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'invited_by');
+    }
+
+    /**
+     * @return BelongsTo<Role, $this>
+     */
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
     }
 
     public function isExpired(): bool

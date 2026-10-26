@@ -24,6 +24,7 @@ describe('company store', () => {
   })
 
   it('identifica a empresa ativa', async () => {
+    vi.spyOn(companiesApi, 'access').mockResolvedValue({ role: null, permissions: [] })
     vi.spyOn(companiesApi, 'list').mockResolvedValue([company('a', 'Alfa'), company('b', 'Beta', true)])
     const store = useCompanyStore()
 
@@ -33,6 +34,7 @@ describe('company store', () => {
   })
 
   it('troca a empresa ativa sem deixar duas marcadas', async () => {
+    vi.spyOn(companiesApi, 'access').mockResolvedValue({ role: null, permissions: [] })
     vi.spyOn(companiesApi, 'list').mockResolvedValue([company('a', 'Alfa', true), company('b', 'Beta')])
     vi.spyOn(companiesApi, 'switchTo').mockResolvedValue(company('b', 'Beta', true))
     const store = useCompanyStore()
@@ -45,11 +47,34 @@ describe('company store', () => {
   })
 
   it('a empresa criada vira a ativa', async () => {
+    vi.spyOn(companiesApi, 'access').mockResolvedValue({ role: { id: 1, name: 'Dono' }, permissions: ['roles.manage'] })
     vi.spyOn(companiesApi, 'create').mockResolvedValue(company('c', 'Nova', true))
     const store = useCompanyStore()
 
     await store.create({ name: 'Nova' })
 
     expect(store.current?.name).toBe('Nova')
+  })
+
+  it('libera na tela só as permissões do papel na empresa ativa', async () => {
+    vi.spyOn(companiesApi, 'list').mockResolvedValue([company('a', 'Alfa', true), company('b', 'Beta')])
+    const access = vi
+      .spyOn(companiesApi, 'access')
+      .mockResolvedValueOnce({ role: { id: 1, name: 'Administrador' }, permissions: ['members.invite'] })
+      .mockResolvedValueOnce({ role: { id: 9, name: 'Membro' }, permissions: ['members.view'] })
+    vi.spyOn(companiesApi, 'switchTo').mockResolvedValue(company('b', 'Beta', true))
+    const store = useCompanyStore()
+
+    await store.load()
+    expect(store.can('members.invite')).toBe(true)
+
+    await store.switchTo('b')
+    expect(access).toHaveBeenCalledTimes(2)
+    expect(store.can('members.invite')).toBe(false)
+    expect(store.can('members.view')).toBe(true)
+  })
+
+  it('sem empresa carregada, nada é permitido', () => {
+    expect(useCompanyStore().can('members.view')).toBe(false)
   })
 })

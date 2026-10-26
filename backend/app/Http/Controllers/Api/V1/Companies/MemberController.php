@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Api\V1\Companies;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Companies\ManageMembersRequest;
+use App\Http\Requests\Companies\UpdateMemberRoleRequest;
 use App\Http\Resources\MemberResource;
 use App\Models\User;
 use App\Services\Companies\MembershipService;
+use App\Services\Companies\RoleService;
 use App\Support\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -25,7 +26,14 @@ class MemberController extends Controller
         ]);
     }
 
-    public function destroy(ManageMembersRequest $request, TenantContext $tenant, User $member): Response
+    public function updateRole(UpdateMemberRoleRequest $request, TenantContext $tenant, RoleService $roles, User $member): Response
+    {
+        $roles->changeMemberRole($tenant->company(), $member, $request->roleId());
+
+        return response()->noContent();
+    }
+
+    public function destroy(TenantContext $tenant, User $member): Response
     {
         $this->memberships->remove($tenant->company(), $member);
 

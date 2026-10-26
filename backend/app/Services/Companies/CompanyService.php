@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\User;
 use App\Repositories\Contracts\CompanyRepository;
 use App\Repositories\Contracts\UserRepository;
+use App\Support\Transactions\TransactionManager;
 use Illuminate\Database\Eloquent\Collection;
 
 class CompanyService
@@ -15,6 +16,8 @@ class CompanyService
     public function __construct(
         private readonly CompanyRepository $companies,
         private readonly UserRepository $users,
+        private readonly RoleService $roles,
+        private readonly TransactionManager $transaction,
     ) {}
 
     /**
@@ -26,15 +29,18 @@ class CompanyService
     }
 
     /**
-     * Cria a empresa com o usuário como dono e já a torna a empresa ativa dele.
+     * Cria a empresa com o usuário como dono, monta os papéis padrão e já a torna
+     * a empresa ativa dele.
      */
     public function create(User $owner, CompanyData $data): Company
     {
-        $company = $this->companies->createWithOwner($data->toArray(), $owner);
+        return $this->transaction->run(function () use ($owner, $data): Company {
+            $company = $this->companies->createWithOwner($data->toArray(), $owner);
+            $this->roles->setupCompany($company, $owner);
+            $this->users->setCurrentCompany($owner, $company);
 
-        $this->users->setCurrentCompany($owner, $company);
-
-        return $company;
+            return $company;
+        });
     }
 
     public function update(Company $company, CompanyData $data): Company
