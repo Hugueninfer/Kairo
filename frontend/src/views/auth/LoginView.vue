@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import { safeRedirect } from '@/composables/safeRedirect'
 import { useApiForm } from '@/composables/useApiForm'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -23,8 +24,7 @@ async function onSubmit() {
   })
 
   if (ok) {
-    const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/') ? route.query.redirect : '/'
-    await router.push(redirect)
+    await router.push(safeRedirect(route.query.redirect))
   }
 }
 </script>
@@ -55,7 +55,7 @@ async function onSubmit() {
 
     <template #footer>
       Ainda não tem conta?
-      <RouterLink to="/cadastro" class="font-medium text-brand-600 hover:underline">Criar conta</RouterLink>
+      <RouterLink :to="{ name: 'register', query: route.query }" class="font-medium text-brand-600 hover:underline">Criar conta</RouterLink>
     </template>
   </AuthLayout>
 </template>

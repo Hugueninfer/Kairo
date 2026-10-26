@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Models\Company;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepository;
 use Illuminate\Support\Str;
@@ -54,5 +55,11 @@ class UserRepositoryEloquent extends BaseRepository implements UserRepository
             'password' => $password,
             'remember_token' => Str::random(60),
         ])->save();
+    }
+
+    public function setCurrentCompany(User $user, ?Company $company): void
+    {
+        $user->forceFill(['current_company_id' => $company?->id])->save();
+        $user->setRelation('currentCompany', $company);
     }
 }

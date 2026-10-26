@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { RouteLocationNormalized } from 'vue-router'
 import { authGuard } from '@/router'
 import { authApi } from '@/services/auth'
+import { companiesApi } from '@/services/companies'
 import { useAuthStore } from '@/stores/auth'
 
 function routeTo(path: string, meta: RouteLocationNormalized['meta']): RouteLocationNormalized {
@@ -37,5 +38,14 @@ describe('authGuard', () => {
     auth.loaded = true
 
     expect(await authGuard(routeTo('/', { requiresAuth: true }))).toBe(true)
+  })
+
+  it('manda para criar a primeira empresa quando não há empresa ativa', async () => {
+    vi.spyOn(companiesApi, 'list').mockResolvedValue([])
+    const auth = useAuthStore()
+    auth.user = { id: 1, name: 'Ana', email: 'a@k.test', email_verified: true, created_at: null }
+    auth.loaded = true
+
+    expect(await authGuard(routeTo('/', { requiresAuth: true, requiresCompany: true }))).toEqual({ name: 'company-create' })
   })
 })
