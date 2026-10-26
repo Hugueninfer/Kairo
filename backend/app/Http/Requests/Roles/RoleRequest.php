@@ -28,7 +28,7 @@ class RoleRequest extends FormRequest
 
         return new RoleData(
             name: $this->string('name')->trim()->toString(),
-            permissions: array_map(fn (string $value) => Permission::from($value), array_values($permissions)),
+            permissions: array_map(fn (string $value) => Permission::from($value), $permissions),
         );
     }
 }
