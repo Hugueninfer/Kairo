@@ -7,3 +7,9 @@ parameters:
         - routes/
         - database/
     level: 6
+    ignoreErrors:
+        # Traits de Enum ficam prontos antes do primeiro Enum de negócio usá-los.
+        -
+            identifier: trait.unused
+            path: app/Enums/Concerns/*
+            reportUnmatched: false
