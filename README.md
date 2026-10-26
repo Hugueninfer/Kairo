@@ -1,3 +1,64 @@
 # Kairo
 
-Plataforma de gestão para autônomos e freelancers (Laravel + Vue).
+Plataforma SaaS multi-tenant de gestão para autônomos, freelancers e pequenas agências: clientes, orçamentos e contratos, projetos e tarefas, planilha de horas, faturas com link de pagamento, cobrança recorrente e boards colaborativos.
+
+## Estrutura
+
+```
+backend/    API em Laravel 13 (Sanctum SPA, l5-repository, Pest, Larastan)
+frontend/   SPA em Vue 3 + TypeScript (Vite, Pinia, Vue Router, Axios)
+compose.yaml  Postgres, Redis e Mailpit para desenvolvimento
+```
+
+O front nunca acessa o banco: tudo passa pela API em `/api/v1`.
+
+## Rodando localmente
+
+Requisitos: PHP 8.3+, Composer, Node 22+ e Docker.
+
+```bash
+# 1. Serviços de apoio
+docker compose up -d
+
+# 2. API
+cd backend
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan serve          # http://localhost:8000
+
+# 3. Front (em outro terminal)
+cd frontend
+npm install
+cp .env.example .env
+npm run dev                # http://localhost:5173
+```
+
+Os e-mails enviados em desenvolvimento aparecem no Mailpit: http://localhost:8025
+
+## Qualidade
+
+```bash
+# backend/
+vendor/bin/pint --test     # padrão de código
+vendor/bin/phpstan analyse # análise estática
+vendor/bin/pest            # testes
+
+# frontend/
+npm run type-check
+npm test
+npm run build
+```
+
+O GitHub Actions roda tudo isso em cada PR.
+
+## Arquitetura do back-end
+
+Route → Middleware → FormRequest → Controller → DTO → Service → Repository → Model, com a resposta saindo por um API Resource.
+
+- **Controllers** são finos: recebem o FormRequest, chamam o Service e devolvem um Resource.
+- **Services** têm a regra de negócio e não usam Eloquent nem query builder.
+- **Repositories** (prettus/l5-repository) concentram todo o acesso ao banco.
+
+As regras de camada são checadas por testes de arquitetura em `backend/tests/Arch`.
