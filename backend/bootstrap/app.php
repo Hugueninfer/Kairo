@@ -1,10 +1,14 @@
 <?php
 
 use App\Http\Middleware\SecurityHeaders;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -23,4 +27,27 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Mensagens padronizadas na API, sem expor nomes de models ou detalhes internos.
+        $exceptions->render(function (Throwable $e, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            if ($e instanceof AuthenticationException) {
+                return response()->json(['message' => 'Você precisa estar autenticado.', 'code' => 'unauthenticated'], 401);
+            }
+
+            $status = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : null;
+
+            if ($e instanceof ModelNotFoundException || $status === 404) {
+                return response()->json(['message' => 'Recurso não encontrado.', 'code' => 'not_found'], 404);
+            }
+
+            if ($e instanceof AuthorizationException || $status === 403) {
+                return response()->json(['message' => 'Você não tem permissão para esta ação.', 'code' => 'forbidden'], 403);
+            }
+
+            return null;
+        });
     })->create();
