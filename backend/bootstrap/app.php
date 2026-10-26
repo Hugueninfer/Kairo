@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -31,6 +32,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (Throwable $e, Request $request) {
             if (! $request->is('api/*')) {
                 return null;
+            }
+
+            if ($e instanceof AuthenticationException) {
+                return response()->json(['message' => 'Você precisa estar autenticado.', 'code' => 'unauthenticated'], 401);
             }
 
             $status = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : null;

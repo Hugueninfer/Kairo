@@ -27,6 +27,7 @@ cp .env.example .env
 php artisan key:generate
 php artisan migrate
 php artisan serve          # http://localhost:8000
+php artisan queue:work --queue=mail,default   # em outro terminal: envia os e-mails
 
 # 3. Front (em outro terminal)
 cd frontend

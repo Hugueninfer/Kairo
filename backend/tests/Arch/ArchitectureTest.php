@@ -39,4 +39,5 @@ arch('código de produção não usa funções de debug')
     ->expect(['dd', 'dump', 'ray', 'var_dump', 'die', 'exit'])
     ->not->toBeUsed();
 
-arch()->preset()->security()->ignoring('md5');
+// sha1 é usado só no hash padrão do Laravel para o link de verificação de e-mail (não guarda senha).
+arch()->preset()->security()->ignoring(['md5', 'App\Services\Auth\EmailVerificationService']);

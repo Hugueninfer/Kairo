@@ -17,6 +17,9 @@ return [
 
     'version' => env('APP_VERSION', '0.1.0'),
 
+    // Endereço do front em Vue, usado nos links enviados por e-mail.
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
@@ -80,7 +83,7 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => env('APP_LOCALE', 'pt_BR'),
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
