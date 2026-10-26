@@ -2,7 +2,11 @@
 
 namespace App\Providers;
 
+use App\Repositories\Contracts\CompanyRepository;
+use App\Repositories\Contracts\InvitationRepository;
 use App\Repositories\Contracts\UserRepository;
+use App\Repositories\Eloquent\CompanyRepositoryEloquent;
+use App\Repositories\Eloquent\InvitationRepositoryEloquent;
 use App\Repositories\Eloquent\UserRepositoryEloquent;
 use Illuminate\Support\ServiceProvider;
 
@@ -17,5 +21,7 @@ class RepositoryServiceProvider extends ServiceProvider
      */
     public array $bindings = [
         UserRepository::class => UserRepositoryEloquent::class,
+        CompanyRepository::class => CompanyRepositoryEloquent::class,
+        InvitationRepository::class => InvitationRepositoryEloquent::class,
     ];
 }

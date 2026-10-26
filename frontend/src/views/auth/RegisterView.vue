@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import { safeRedirect } from '@/composables/safeRedirect'
 import { useApiForm } from '@/composables/useApiForm'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
+const route = useRoute()
 const router = useRouter()
 const { submitting, message, fieldErrors, submit } = useApiForm()
 
@@ -21,7 +23,7 @@ async function onSubmit() {
   })
 
   if (ok) {
-    await router.push('/')
+    await router.push(safeRedirect(route.query.redirect))
   }
 }
 </script>
@@ -53,7 +55,7 @@ async function onSubmit() {
 
     <template #footer>
       Já tem conta?
-      <RouterLink to="/login" class="font-medium text-brand-600 hover:underline">Entrar</RouterLink>
+      <RouterLink :to="{ name: 'login', query: route.query }" class="font-medium text-brand-600 hover:underline">Entrar</RouterLink>
     </template>
   </AuthLayout>
 </template>

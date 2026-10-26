@@ -1,19 +1,38 @@
-import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
+import { createRouter, createWebHistory, type RouteLocationNormalized, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useCompanyStore } from '@/stores/company'
 
 declare module 'vue-router' {
   interface RouteMeta {
     requiresAuth?: boolean
+    requiresCompany?: boolean
     guestOnly?: boolean
   }
 }
 
-export const routes = [
+export const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'dashboard',
     component: () => import('@/views/DashboardView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true },
+  },
+  {
+    path: '/empresa',
+    name: 'company-settings',
+    component: () => import('@/views/companies/CompanySettingsView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true },
+  },
+  {
+    path: '/empresas/nova',
+    name: 'company-create',
+    component: () => import('@/views/companies/CreateCompanyView.vue'),
     meta: { requiresAuth: true },
+  },
+  {
+    path: '/convite/:token',
+    name: 'invitation',
+    component: () => import('@/views/companies/AcceptInvitationView.vue'),
   },
   {
     path: '/login',
@@ -42,7 +61,10 @@ export const routes = [
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
 
-/** Protege as rotas: quem não está logado vai para o login; quem está logado não vê telas de visitante. */
+/**
+ * Protege as rotas: visitante vai para o login; logado não vê telas de visitante;
+ * telas da empresa exigem uma empresa ativa (senão, vai criar a primeira).
+ */
 export async function authGuard(to: RouteLocationNormalized) {
   const auth = useAuthStore()
 
@@ -56,6 +78,18 @@ export async function authGuard(to: RouteLocationNormalized) {
 
   if (to.meta.guestOnly && auth.isAuthenticated) {
     return { name: 'dashboard' }
+  }
+
+  if (to.meta.requiresCompany) {
+    const company = useCompanyStore()
+
+    if (!company.loaded) {
+      await company.load().catch(() => undefined)
+    }
+
+    if (!company.current) {
+      return { name: 'company-create' }
+    }
   }
 
   return true
