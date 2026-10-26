@@ -26,6 +26,25 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresCompany: true },
   },
   {
+    path: '/clientes',
+    name: 'clients',
+    component: () => import('@/views/clients/ClientsView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'clients.view' },
+  },
+  {
+    path: '/projetos',
+    name: 'projects',
+    component: () => import('@/views/projects/ProjectsView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'projects.view' },
+  },
+  {
+    path: '/projetos/:id',
+    name: 'project-board',
+    component: () => import('@/views/projects/ProjectBoardView.vue'),
+    props: true,
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'projects.view' },
+  },
+  {
     path: '/empresa/papeis',
     name: 'company-roles',
     component: () => import('@/views/companies/RolesView.vue'),

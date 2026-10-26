@@ -23,6 +23,8 @@ interface CompanyRepository extends RepositoryInterface
 
     public function isMember(Company $company, User $user): bool;
 
+    public function findMember(Company $company, int $userId): ?User;
+
     public function addMember(Company $company, User $user): void;
 
     public function removeMember(Company $company, User $user): void;

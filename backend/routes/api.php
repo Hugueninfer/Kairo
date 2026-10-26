@@ -9,6 +9,10 @@ use App\Http\Controllers\Api\V1\Companies\InvitationController;
 use App\Http\Controllers\Api\V1\Companies\MemberController;
 use App\Http\Controllers\Api\V1\Companies\RoleController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\OptionsController;
+use App\Http\Controllers\Api\V1\Projects\ClientController;
+use App\Http\Controllers\Api\V1\Projects\ProjectController;
+use App\Http\Controllers\Api\V1\Projects\TaskController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->name('api.v1.')->group(function (): void {
@@ -38,6 +42,8 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::post('invitations/{token}/accept', [InvitationController::class, 'accept'])
             ->middleware('throttle:auth')
             ->name('invitations.accept');
+
+        Route::get('options', OptionsController::class)->name('options');
 
         Route::get('companies', [CompanyController::class, 'index'])->name('companies.index');
         Route::post('companies', [CompanyController::class, 'store'])->name('companies.store');
@@ -87,6 +93,30 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::delete('roles/{role}', [RoleController::class, 'destroy'])
                 ->can(Permission::RolesManage->value)
                 ->name('roles.destroy');
+
+            Route::get('clients', [ClientController::class, 'index'])->can(Permission::ClientsView->value)->name('clients.index');
+            Route::get('clients/{client}', [ClientController::class, 'show'])->can(Permission::ClientsView->value)->name('clients.show');
+            Route::post('clients', [ClientController::class, 'store'])->can(Permission::ClientsManage->value)->name('clients.store');
+            Route::put('clients/{client}', [ClientController::class, 'update'])->can(Permission::ClientsManage->value)->name('clients.update');
+            Route::delete('clients/{client}', [ClientController::class, 'destroy'])->can(Permission::ClientsManage->value)->name('clients.destroy');
+
+            Route::get('projects', [ProjectController::class, 'index'])->can(Permission::ProjectsView->value)->name('projects.index');
+            Route::get('projects/{project}', [ProjectController::class, 'show'])->can(Permission::ProjectsView->value)->name('projects.show');
+            Route::post('projects', [ProjectController::class, 'store'])->can(Permission::ProjectsManage->value)->name('projects.store');
+            Route::put('projects/{project}', [ProjectController::class, 'update'])->can(Permission::ProjectsManage->value)->name('projects.update');
+            Route::delete('projects/{project}', [ProjectController::class, 'destroy'])->can(Permission::ProjectsManage->value)->name('projects.destroy');
+
+            // Minhas tarefas: qualquer membro vê as próprias, sem permissão extra.
+            Route::get('tasks/mine', [TaskController::class, 'mine'])->name('tasks.mine');
+
+            // A tarefa sempre é buscada dentro do projeto da URL (scopeBindings).
+            Route::prefix('projects/{project}/tasks')->name('projects.tasks.')->scopeBindings()->group(function (): void {
+                Route::get('/', [TaskController::class, 'index'])->can(Permission::ProjectsView->value)->name('index');
+                Route::post('/', [TaskController::class, 'store'])->can(Permission::TasksManage->value)->name('store');
+                Route::put('{task}', [TaskController::class, 'update'])->can(Permission::TasksManage->value)->name('update');
+                Route::put('{task}/move', [TaskController::class, 'move'])->can(Permission::TasksManage->value)->name('move');
+                Route::delete('{task}', [TaskController::class, 'destroy'])->can(Permission::TasksManage->value)->name('destroy');
+            });
         });
     });
 });

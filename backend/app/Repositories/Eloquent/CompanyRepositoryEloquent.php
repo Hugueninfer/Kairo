@@ -44,6 +44,12 @@ class CompanyRepositoryEloquent extends BaseRepository implements CompanyReposit
         return $company->members()->whereKey($user->id)->exists();
     }
 
+    public function findMember(Company $company, int $userId): ?User
+    {
+        /** @var User|null */
+        return $company->members()->whereKey($userId)->first();
+    }
+
     public function addMember(Company $company, User $user): void
     {
         $company->members()->syncWithoutDetaching([$user->id]);
