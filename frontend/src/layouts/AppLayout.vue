@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import TimerWidget from '@/components/timesheet/TimerWidget.vue'
 import { useCompanyStore } from '@/stores/company'
+import { useTimerStore } from '@/stores/timer'
 
 defineProps<{
   /** Telas largas, como o quadro de tarefas. */
@@ -10,6 +12,7 @@ defineProps<{
 
 const auth = useAuthStore()
 const company = useCompanyStore()
+const timer = useTimerStore()
 const router = useRouter()
 
 async function onSwitch(event: Event) {
@@ -19,6 +22,7 @@ async function onSwitch(event: Event) {
     return
   }
   await company.switchTo(id)
+  await timer.load(true)
   // Recarrega a tela atual com os dados da nova empresa.
   await router.replace({ path: router.currentRoute.value.fullPath, force: true })
 }
@@ -26,6 +30,7 @@ async function onSwitch(event: Event) {
 async function logout() {
   await auth.logout()
   company.reset()
+  timer.reset()
   await router.push('/login')
 }
 </script>
@@ -39,12 +44,14 @@ async function logout() {
           <nav class="flex gap-4 text-sm text-slate-600">
             <RouterLink to="/" class="hover:text-brand-600" active-class="font-semibold text-brand-600" exact-active-class="font-semibold text-brand-600">Painel</RouterLink>
             <RouterLink v-if="company.can('projects.view')" to="/projetos" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Projetos</RouterLink>
+            <RouterLink v-if="company.can('projects.view')" to="/horas" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Horas</RouterLink>
             <RouterLink v-if="company.can('clients.view')" to="/clientes" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Clientes</RouterLink>
             <RouterLink to="/empresa" class="hover:text-brand-600" exact-active-class="font-semibold text-brand-600">Empresa</RouterLink>
             <RouterLink v-if="company.can('roles.manage')" to="/empresa/papeis" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Papéis</RouterLink>
           </nav>
         </div>
         <div class="flex items-center gap-4 text-sm">
+          <TimerWidget v-if="company.can('projects.view')" />
           <label class="sr-only" for="company-switcher">Empresa ativa</label>
           <select
             id="company-switcher"

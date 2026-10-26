@@ -25,6 +25,8 @@ interface TaskRepository extends RepositoryInterface
      */
     public function openAssignedTo(User $user): Collection;
 
+    public function findByUlid(string $ulid): ?Task;
+
     public function nextPosition(Project $project, TaskStatus $status): int;
 
     /**

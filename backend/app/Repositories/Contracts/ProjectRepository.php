@@ -14,6 +14,8 @@ interface ProjectRepository extends RepositoryInterface
      */
     public function paginateFiltered(?string $search, ?ProjectStatus $status, ?int $clientId, int $perPage): LengthAwarePaginator;
 
+    public function findByUlid(string $ulid): ?Project;
+
     /**
      * Carrega cliente e a contagem de tarefas abertas e concluídas.
      */

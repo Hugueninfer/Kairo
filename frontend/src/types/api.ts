@@ -142,3 +142,34 @@ export interface Options {
   task_statuses: Option<TaskStatus>[]
   task_priorities: Option<TaskPriority>[]
 }
+
+export type TimeEntryStatus = 'pending' | 'approved' | 'rejected'
+
+export interface TimeEntry {
+  id: string
+  description: string | null
+  started_at: string
+  ended_at: string | null
+  is_running: boolean
+  duration_minutes: number
+  billable: boolean
+  hourly_rate: string | null
+  amount: string | null
+  status: Option<TimeEntryStatus>
+  user?: { id: number; name: string }
+  project?: { id: string; name: string }
+  task?: { id: string; title: string } | null
+}
+
+/** Planilha da semana (segunda a domingo), em minutos. */
+export interface WeekSheet {
+  week_start: string
+  days: string[]
+  rows: {
+    project: { id: string; name: string }
+    task: { id: string; title: string } | null
+    minutes: number[]
+    total: number
+  }[]
+  totals: { minutes: number[]; total: number; billable_minutes: number; amount: string }
+}
