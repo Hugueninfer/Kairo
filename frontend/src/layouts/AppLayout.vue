@@ -8,6 +8,8 @@ import { useTimerStore } from '@/stores/timer'
 defineProps<{
   /** Telas largas, como o quadro de tarefas. */
   wide?: boolean
+  /** Ocupa a largura toda, como o canvas dos boards. */
+  full?: boolean
 }>()
 
 const auth = useAuthStore()
@@ -47,6 +49,7 @@ async function logout() {
             <RouterLink v-if="company.can('projects.view')" to="/horas" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Horas</RouterLink>
             <RouterLink v-if="company.can('quotes.view')" to="/orcamentos" class="hover:text-brand-600" :class="{ 'font-semibold text-brand-600': $route.path.startsWith('/orcamentos') || $route.path === '/contratos' }">Orçamentos</RouterLink>
             <RouterLink v-if="company.can('invoices.view')" to="/faturas" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Faturas</RouterLink>
+            <RouterLink v-if="company.can('boards.view')" to="/boards" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Boards</RouterLink>
             <RouterLink v-if="company.can('clients.view')" to="/clientes" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Clientes</RouterLink>
             <RouterLink to="/empresa" class="hover:text-brand-600" exact-active-class="font-semibold text-brand-600">Empresa</RouterLink>
             <RouterLink v-if="company.can('roles.manage')" to="/empresa/papeis" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Papéis</RouterLink>
@@ -71,7 +74,7 @@ async function logout() {
       </div>
     </header>
 
-    <main class="mx-auto space-y-4 px-4 py-8" :class="wide ? 'max-w-7xl' : 'max-w-5xl'">
+    <main class="mx-auto space-y-4 px-4" :class="full ? 'py-4' : ['py-8', wide ? 'max-w-7xl' : 'max-w-5xl']">
       <slot />
     </main>
   </div>

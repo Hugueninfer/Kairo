@@ -321,3 +321,39 @@ export interface InvoiceSummary {
   overdue: string
   received_this_month: string
 }
+
+export type BoardElementType = 'note' | 'rect' | 'ellipse' | 'text' | 'arrow'
+
+export interface BoardElementProps {
+  text?: string
+  fill?: string
+  stroke?: string
+  font_size?: number
+  /** Seta solta: pontos absolutos [x1, y1, x2, y2]. */
+  points?: number[]
+  /** Seta ligando dois elementos: os pontos são recalculados quando eles se mexem. */
+  from?: string
+  to?: string
+}
+
+export interface BoardElement {
+  id: string
+  type: BoardElementType
+  x: number
+  y: number
+  width: number
+  height: number
+  rotation: number
+  z_index: number
+  props: BoardElementProps
+}
+
+export interface Board {
+  id: string
+  title: string
+  updated_at: string
+  project?: { id: string; name: string } | null
+  creator?: { name: string } | null
+  elements_count?: number
+  elements?: BoardElement[]
+}

@@ -93,6 +93,19 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresCompany: true, permission: 'invoices.view' },
   },
   {
+    path: '/boards',
+    name: 'boards',
+    component: () => import('@/views/boards/BoardsView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'boards.view' },
+  },
+  {
+    path: '/boards/:id',
+    name: 'board',
+    component: () => import('@/views/boards/BoardView.vue'),
+    props: true,
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'boards.view' },
+  },
+  {
     // Link do e-mail do cliente: público, a API confere a assinatura.
     path: '/orcamento/:id',
     name: 'public-quote',

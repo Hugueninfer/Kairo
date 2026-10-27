@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Billing\InvoiceController;
 use App\Http\Controllers\Api\V1\Billing\PaymentWebhookController;
+use App\Http\Controllers\Api\V1\Boards\BoardController;
 use App\Http\Controllers\Api\V1\Companies\BillingSettingsController;
 use App\Http\Controllers\Api\V1\Companies\CompanyController;
 use App\Http\Controllers\Api\V1\Companies\InvitationController;
@@ -172,6 +173,15 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
                 Route::post('{invoice}/send', [InvoiceController::class, 'send'])->can(Permission::InvoicesManage->value)->name('send');
                 Route::post('{invoice}/cancel', [InvoiceController::class, 'cancel'])->can(Permission::InvoicesManage->value)->name('cancel');
                 Route::post('{invoice}/payments', [InvoiceController::class, 'recordPayment'])->can(Permission::InvoicesManage->value)->name('payments.store');
+            });
+
+            Route::prefix('boards')->name('boards.')->group(function (): void {
+                Route::get('/', [BoardController::class, 'index'])->can(Permission::BoardsView->value)->name('index');
+                Route::post('/', [BoardController::class, 'store'])->can(Permission::BoardsManage->value)->name('store');
+                Route::get('{board}', [BoardController::class, 'show'])->can(Permission::BoardsView->value)->name('show');
+                Route::put('{board}', [BoardController::class, 'update'])->can(Permission::BoardsManage->value)->name('update');
+                Route::delete('{board}', [BoardController::class, 'destroy'])->can(Permission::BoardsManage->value)->name('destroy');
+                Route::post('{board}/elements', [BoardController::class, 'sync'])->can(Permission::BoardsManage->value)->name('elements.sync');
             });
 
             // Minhas tarefas: qualquer membro vê as próprias, sem permissão extra.
