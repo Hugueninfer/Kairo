@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ContractStatus;
+use App\Enums\RecurrenceFrequency;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -16,8 +17,17 @@ use Illuminate\Support\Carbon;
  * @property ContractStatus $status
  * @property string $total
  * @property Carbon $signed_at
+ * @property RecurrenceFrequency|null $billing_frequency
+ * @property string|null $recurring_amount
+ * @property Carbon|null $next_billing_on
+ * @property Carbon|null $billing_ends_on
+ * @property int $payment_term_days
+ * @property bool $auto_send
  */
-#[Fillable(['client_id', 'quote_id', 'project_id', 'number', 'title', 'total', 'terms', 'status', 'signed_at', 'signer_name', 'signer_ip'])]
+#[Fillable([
+    'client_id', 'quote_id', 'project_id', 'number', 'title', 'total', 'terms', 'status', 'signed_at', 'signer_name', 'signer_ip',
+    'billing_frequency', 'recurring_amount', 'next_billing_on', 'billing_ends_on', 'payment_term_days', 'auto_send',
+])]
 class Contract extends Model
 {
     use BelongsToCompany, HasUlids;
@@ -44,6 +54,12 @@ class Contract extends Model
             'status' => ContractStatus::class,
             'total' => 'decimal:2',
             'signed_at' => 'datetime',
+            'billing_frequency' => RecurrenceFrequency::class,
+            'recurring_amount' => 'decimal:2',
+            'next_billing_on' => 'date',
+            'billing_ends_on' => 'date',
+            'payment_term_days' => 'integer',
+            'auto_send' => 'boolean',
         ];
     }
 

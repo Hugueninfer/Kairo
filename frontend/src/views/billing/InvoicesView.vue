@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import BillingSettingsModal from '@/components/billing/BillingSettingsModal.vue'
 import ContractInvoiceModal from '@/components/billing/ContractInvoiceModal.vue'
 import HoursInvoiceModal from '@/components/billing/HoursInvoiceModal.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
@@ -21,7 +22,7 @@ const page = ref<(Paginated<Invoice> & { summary: InvoiceSummary }) | null>(null
 const status = ref('')
 const search = ref('')
 const error = ref<string | null>(null)
-const modal = ref<'hours' | 'contract' | null>(null)
+const modal = ref<'hours' | 'contract' | 'reminders' | null>(null)
 
 const money = (value: string) => formatMoney(value, company.current?.currency)
 const date = (value: string) => new Date(`${value}T12:00:00`).toLocaleDateString('pt-BR')
@@ -61,10 +62,13 @@ onMounted(() => Promise.all([load(), loadOptions()]))
   <AppLayout>
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-2xl font-semibold">Faturas</h1>
-      <div v-if="canManage" class="flex flex-wrap gap-2 text-sm">
-        <button type="button" class="rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium hover:bg-slate-50" @click="modal = 'hours'">Faturar horas</button>
-        <button type="button" class="rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium hover:bg-slate-50" @click="modal = 'contract'">Faturar contrato</button>
-        <RouterLink :to="{ name: 'invoice-new' }" class="rounded-lg bg-brand-600 px-4 py-2 font-semibold text-white hover:bg-brand-700">Nova fatura</RouterLink>
+      <div class="flex flex-wrap gap-2 text-sm">
+        <button type="button" class="rounded-lg px-3 py-2 font-medium text-brand-600 hover:bg-white" data-test="reminder-settings" @click="modal = 'reminders'">Lembretes</button>
+        <template v-if="canManage">
+          <button type="button" class="rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium hover:bg-slate-50" @click="modal = 'hours'">Faturar horas</button>
+          <button type="button" class="rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium hover:bg-slate-50" @click="modal = 'contract'">Faturar contrato</button>
+          <RouterLink :to="{ name: 'invoice-new' }" class="rounded-lg bg-brand-600 px-4 py-2 font-semibold text-white hover:bg-brand-700">Nova fatura</RouterLink>
+        </template>
       </div>
     </div>
 
@@ -113,5 +117,6 @@ onMounted(() => Promise.all([load(), loadOptions()]))
 
     <HoursInvoiceModal v-if="modal === 'hours'" @close="modal = null" @saved="onCreated" />
     <ContractInvoiceModal v-if="modal === 'contract'" @close="modal = null" @saved="onCreated" />
+    <BillingSettingsModal v-if="modal === 'reminders'" @close="modal = null" />
   </AppLayout>
 </template>

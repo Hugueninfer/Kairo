@@ -12,7 +12,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['name', 'document', 'currency', 'timezone', 'default_hourly_rate'])]
+/**
+ * @property bool $reminders_enabled
+ * @property list<string>|null $reminder_stages
+ * @property string|null $reminder_message
+ */
+#[Fillable(['name', 'document', 'currency', 'timezone', 'default_hourly_rate', 'reminders_enabled', 'reminder_stages', 'reminder_message'])]
 class Company extends Model
 {
     /** @use HasFactory<CompanyFactory> */
@@ -40,6 +45,8 @@ class Company extends Model
     {
         return [
             'default_hourly_rate' => 'decimal:2',
+            'reminders_enabled' => 'boolean',
+            'reminder_stages' => 'array',
         ];
     }
 

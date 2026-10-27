@@ -1,5 +1,5 @@
 import { http } from './http'
-import type { ApiResource, Invoice, InvoiceSummary, Paginated, PaymentMethod } from '@/types/api'
+import type { ApiResource, BillingSettings, Invoice, InvoiceSummary, Paginated, PaymentMethod } from '@/types/api'
 
 export interface InvoiceItemPayload {
   description: string
@@ -71,5 +71,15 @@ export const invoicesApi = {
 
   pdfUrl(id: string): string {
     return `${import.meta.env.VITE_API_URL || ''}${invoice(id)}/pdf`
+  },
+
+  async billingSettings(): Promise<BillingSettings> {
+    const { data } = await http.get<ApiResource<BillingSettings>>('/api/v1/company/billing-settings')
+    return data.data
+  },
+
+  async updateBillingSettings(payload: BillingSettings): Promise<BillingSettings> {
+    const { data } = await http.put<ApiResource<BillingSettings>>('/api/v1/company/billing-settings', payload)
+    return data.data
   },
 }

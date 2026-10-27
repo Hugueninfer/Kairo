@@ -3,8 +3,10 @@
 namespace App\Repositories\Contracts;
 
 use App\Enums\InvoiceStatus;
+use App\Enums\ReminderStage;
 use App\Models\Invoice;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Prettus\Repository\Contracts\RepositoryInterface;
 
 interface InvoiceRepository extends RepositoryInterface
@@ -74,4 +76,17 @@ interface InvoiceRepository extends RepositoryInterface
      * @return array{receivable: string, overdue: string, received_this_month: string}
      */
     public function summary(string $monthStart): array;
+
+    /**
+     * Se o contrato já tem fatura para o período que começa em $periodStart.
+     */
+    public function existsForPeriod(int $contractId, string $periodStart): bool;
+
+    /**
+     * Faturas da empresa ativa esperando pagamento, com vencimento em $dueDate, cliente com e-mail
+     * e sem lembrete desta etapa ainda.
+     *
+     * @return Collection<int, Invoice>
+     */
+    public function awaitingReminder(string $dueDate, ReminderStage $stage): Collection;
 }

@@ -65,4 +65,10 @@ class CompanyRepositoryEloquent extends BaseRepository implements CompanyReposit
         // Os papéis vêm do time atual do spatie (a empresa ativa).
         return $company->members()->with('roles')->orderBy('name')->get();
     }
+
+    public function withRemindersEnabled(): \Illuminate\Support\Collection
+    {
+        /** @var \Illuminate\Support\Collection<int, int> */
+        return Company::query()->where('reminders_enabled', true)->orderBy('id')->pluck('id');
+    }
 }

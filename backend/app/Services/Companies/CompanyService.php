@@ -2,6 +2,7 @@
 
 namespace App\Services\Companies;
 
+use App\DTOs\Companies\BillingSettingsData;
 use App\DTOs\Companies\CompanyData;
 use App\Exceptions\Companies\NotCompanyMemberException;
 use App\Models\Company;
@@ -44,6 +45,15 @@ class CompanyService
     }
 
     public function update(Company $company, CompanyData $data): Company
+    {
+        /** @var Company */
+        return $this->companies->update($data->toArray(), $company->id);
+    }
+
+    /**
+     * Liga/desliga a régua de lembretes, escolhe as etapas e o recado que vai nos e-mails.
+     */
+    public function updateBillingSettings(Company $company, BillingSettingsData $data): Company
     {
         /** @var Company */
         return $this->companies->update($data->toArray(), $company->id);

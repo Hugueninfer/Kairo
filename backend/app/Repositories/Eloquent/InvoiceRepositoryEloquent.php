@@ -5,11 +5,14 @@ namespace App\Repositories\Eloquent;
 use App\Criteria\DocumentFilterCriteria;
 use App\Criteria\SearchCriteria;
 use App\Enums\InvoiceStatus;
+use App\Enums\ReminderStage;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\TimeEntry;
 use App\Repositories\Contracts\InvoiceRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 class InvoiceRepositoryEloquent extends BaseRepository implements InvoiceRepository
@@ -65,6 +68,7 @@ class InvoiceRepositoryEloquent extends BaseRepository implements InvoiceReposit
             'contract:id,ulid,number,title',
             'items',
             'payments',
+            'reminders',
         ])->loadCount('timeEntries');
     }
 
@@ -146,5 +150,28 @@ class InvoiceRepositoryEloquent extends BaseRepository implements InvoiceReposit
             'overdue' => number_format((float) ($open->overdue ?? 0), 2, '.', ''),
             'received_this_month' => number_format((float) $received, 2, '.', ''),
         ];
+    }
+
+    public function existsForPeriod(int $contractId, string $periodStart): bool
+    {
+        return Invoice::query()
+            ->withoutGlobalScope('company')
+            ->where('contract_id', $contractId)
+            ->whereDate('billing_period_start', $periodStart)
+            ->exists();
+    }
+
+    public function awaitingReminder(string $dueDate, ReminderStage $stage): Collection
+    {
+        /** @var Collection<int, Invoice> */
+        return $this->filteredQuery()
+            ->whereIn('status', [InvoiceStatus::Open, InvoiceStatus::PartiallyPaid, InvoiceStatus::Overdue])
+            ->whereDate('due_date', $dueDate)
+            ->whereNotNull('payment_url')
+            ->whereHas('client', fn (Builder $query) => $query->whereNotNull('email'))
+            ->whereDoesntHave('reminders', fn (Builder $query) => $query->where('stage', $stage))
+            ->with(['client', 'company'])
+            ->orderBy('id')
+            ->get();
     }
 }

@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property InvoiceStatus $status
  * @property Carbon $issue_date
  * @property Carbon $due_date
+ * @property Carbon|null $billing_period_start
  * @property string $subtotal
  * @property string $discount
  * @property string $total
@@ -26,7 +27,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $cancelled_at
  */
 #[Fillable([
-    'client_id', 'project_id', 'contract_id', 'created_by', 'number', 'status', 'issue_date', 'due_date', 'notes',
+    'client_id', 'project_id', 'contract_id', 'billing_period_start', 'created_by', 'number', 'status', 'issue_date', 'due_date', 'notes',
     'subtotal', 'discount', 'total', 'amount_paid', 'gateway', 'gateway_charge_id', 'payment_url', 'pdf_path',
     'sent_at', 'paid_at', 'cancelled_at',
 ])]
@@ -57,6 +58,7 @@ class Invoice extends Model
             'status' => InvoiceStatus::class,
             'issue_date' => 'date',
             'due_date' => 'date',
+            'billing_period_start' => 'date',
             'subtotal' => 'decimal:2',
             'discount' => 'decimal:2',
             'total' => 'decimal:2',
@@ -113,6 +115,14 @@ class Invoice extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class)->orderBy('paid_at');
+    }
+
+    /**
+     * @return HasMany<InvoiceReminder, $this>
+     */
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(InvoiceReminder::class)->orderBy('sent_at');
     }
 
     /**

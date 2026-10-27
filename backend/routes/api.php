@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Billing\InvoiceController;
 use App\Http\Controllers\Api\V1\Billing\PaymentWebhookController;
+use App\Http\Controllers\Api\V1\Companies\BillingSettingsController;
 use App\Http\Controllers\Api\V1\Companies\CompanyController;
 use App\Http\Controllers\Api\V1\Companies\InvitationController;
 use App\Http\Controllers\Api\V1\Companies\MemberController;
@@ -154,6 +155,10 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::get('contracts', [ContractController::class, 'index'])->can(Permission::QuotesView->value)->name('contracts.index');
             Route::get('contracts/{contract}', [ContractController::class, 'show'])->can(Permission::QuotesView->value)->name('contracts.show');
             Route::put('contracts/{contract}/status', [ContractController::class, 'close'])->can(Permission::QuotesManage->value)->name('contracts.close');
+            Route::put('contracts/{contract}/recurrence', [ContractController::class, 'recurrence'])->can(Permission::InvoicesManage->value)->name('contracts.recurrence');
+
+            Route::get('billing-settings', [BillingSettingsController::class, 'show'])->can(Permission::InvoicesView->value)->name('billing-settings.show');
+            Route::put('billing-settings', [BillingSettingsController::class, 'update'])->can(Permission::InvoicesManage->value)->name('billing-settings.update');
 
             Route::prefix('invoices')->name('invoices.')->group(function (): void {
                 Route::get('/', [InvoiceController::class, 'index'])->can(Permission::InvoicesView->value)->name('index');

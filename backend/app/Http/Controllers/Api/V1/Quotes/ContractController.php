@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Quotes;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Quotes\CloseContractRequest;
+use App\Http\Requests\Quotes\ContractRecurrenceRequest;
 use App\Http\Requests\Quotes\ListContractsRequest;
 use App\Http\Resources\ContractResource;
 use App\Models\Contract;
@@ -27,5 +28,10 @@ class ContractController extends Controller
     public function close(CloseContractRequest $request, Contract $contract): ContractResource
     {
         return ContractResource::make($this->contracts->close($contract, $request->status()));
+    }
+
+    public function recurrence(ContractRecurrenceRequest $request, Contract $contract): ContractResource
+    {
+        return ContractResource::make($this->contracts->configureRecurrence($contract, $request->toData()));
     }
 }

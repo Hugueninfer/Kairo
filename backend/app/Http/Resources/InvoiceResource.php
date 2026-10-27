@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\InvoiceReminder;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -28,6 +29,7 @@ class InvoiceResource extends JsonResource
             ],
             'issue_date' => $this->issue_date->toDateString(),
             'due_date' => $this->due_date->toDateString(),
+            'billing_period_start' => $this->billing_period_start?->toDateString(),
             'notes' => $this->notes,
             'subtotal' => $this->subtotal,
             'discount' => $this->discount,
@@ -62,6 +64,10 @@ class InvoiceResource extends JsonResource
                 'method' => ['value' => $payment->method->value, 'label' => $payment->method->label()],
                 'paid_at' => $payment->paid_at->toIso8601String(),
                 'via_gateway' => $payment->gateway !== null,
+            ])),
+            'reminders' => $this->whenLoaded('reminders', fn () => $this->reminders->map(fn (InvoiceReminder $reminder) => [
+                'stage' => ['value' => $reminder->stage->value, 'label' => $reminder->stage->label()],
+                'sent_at' => $reminder->sent_at->toIso8601String(),
             ])),
             'time_entries_count' => $this->whenCounted('timeEntries'),
         ];
