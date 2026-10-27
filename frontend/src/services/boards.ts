@@ -1,5 +1,5 @@
 import { http } from './http'
-import type { ApiResource, Board, BoardElement, Paginated } from '@/types/api'
+import type { ApiResource, Board, BoardElement, BoardVersion, Paginated, PublicBoard } from '@/types/api'
 
 export interface BoardPayload {
   title: string
@@ -41,6 +41,44 @@ export const boardsApi = {
   /** Autosave: grava o lote de elementos criados, alterados e apagados. */
   async sync(id: string, changes: BoardChanges): Promise<{ updated_at: string }> {
     const { data } = await http.post<ApiResource<{ updated_at: string }>>(`${board(id)}/elements`, changes)
+    return data.data
+  },
+
+  async versions(id: string, page = 1): Promise<Paginated<BoardVersion>> {
+    const { data } = await http.get<Paginated<BoardVersion>>(`${board(id)}/versions`, { params: { page } })
+    return data
+  },
+
+  async version(id: string, versionId: string): Promise<BoardVersion> {
+    const { data } = await http.get<ApiResource<BoardVersion>>(`${board(id)}/versions/${encodeURIComponent(versionId)}`)
+    return data.data
+  },
+
+  /** A API guarda a versão na fila: ela aparece na lista em seguida. */
+  async saveVersion(id: string, label: string | null): Promise<void> {
+    await http.post(`${board(id)}/versions`, { label })
+  },
+
+  async restore(id: string, versionId: string): Promise<Board> {
+    const { data } = await http.post<ApiResource<Board>>(`${board(id)}/versions/${encodeURIComponent(versionId)}/restore`)
+    return data.data
+  },
+
+  async share(id: string): Promise<Board> {
+    const { data } = await http.post<ApiResource<Board>>(`${board(id)}/share`)
+    return data.data
+  },
+
+  async unshare(id: string): Promise<Board> {
+    const { data } = await http.delete<ApiResource<Board>>(`${board(id)}/share`)
+    return data.data
+  },
+}
+
+/** Board compartilhado com o cliente: sem login, só leitura. */
+export const publicBoardApi = {
+  async get(token: string): Promise<PublicBoard> {
+    const { data } = await http.get<ApiResource<PublicBoard>>(`/api/v1/public/boards/${encodeURIComponent(token)}`)
     return data.data
   },
 }

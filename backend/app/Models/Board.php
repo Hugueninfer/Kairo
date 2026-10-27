@@ -15,9 +15,11 @@ use Illuminate\Support\Carbon;
 /**
  * Quadro colaborativo (estilo Miro), opcionalmente ligado a um projeto.
  *
+ * @property string|null $share_token
+ * @property Carbon|null $shared_at
  * @property Carbon $updated_at
  */
-#[Fillable(['project_id', 'created_by', 'title'])]
+#[Fillable(['project_id', 'created_by', 'title', 'share_token', 'shared_at'])]
 class Board extends Model
 {
     /** @use HasFactory<BoardFactory> */
@@ -34,6 +36,14 @@ class Board extends Model
     public function getRouteKeyName(): string
     {
         return 'ulid';
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return ['shared_at' => 'datetime'];
     }
 
     /**
@@ -58,5 +68,13 @@ class Board extends Model
     public function elements(): HasMany
     {
         return $this->hasMany(BoardElement::class)->orderBy('z_index')->orderBy('id');
+    }
+
+    /**
+     * @return HasMany<BoardVersion, $this>
+     */
+    public function versions(): HasMany
+    {
+        return $this->hasMany(BoardVersion::class);
     }
 }

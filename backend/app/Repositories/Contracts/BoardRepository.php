@@ -18,6 +18,16 @@ interface BoardRepository extends RepositoryInterface
     public function findByUlid(string $ulid): ?Board;
 
     /**
+     * Busca pelo id interno, sem depender da empresa ativa (jobs da fila).
+     */
+    public function findById(int $id): ?Board;
+
+    /**
+     * Board compartilhado pelo link de leitura, com empresa e elementos carregados.
+     */
+    public function findShared(string $token): ?Board;
+
+    /**
      * Carrega projeto e elementos (na ordem de empilhamento).
      */
     public function loadDetails(Board $board): Board;

@@ -106,6 +106,12 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresCompany: true, permission: 'boards.view' },
   },
   {
+    // Board compartilhado com o cliente: público e só leitura, a API confere o link.
+    path: '/b/:token',
+    name: 'public-board',
+    component: () => import('@/views/boards/PublicBoardView.vue'),
+  },
+  {
     // Link do e-mail do cliente: público, a API confere a assinatura.
     path: '/orcamento/:id',
     name: 'public-quote',
