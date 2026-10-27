@@ -6,6 +6,11 @@ return [
     'after_or_equal' => 'O campo :attribute deve ser uma data igual ou posterior a :date.',
     'array' => 'O campo :attribute deve ser uma lista.',
     'before_or_equal' => 'O campo :attribute deve ser uma data igual ou anterior a :date.',
+    'between' => [
+        'array' => 'O campo :attribute deve ter entre :min e :max itens.',
+        'numeric' => 'O campo :attribute deve estar entre :min e :max.',
+        'string' => 'O campo :attribute deve ter entre :min e :max caracteres.',
+    ],
     'boolean' => 'O campo :attribute deve ser verdadeiro ou falso.',
     'confirmed' => 'A confirmação de :attribute não confere.',
     'date_format' => 'O campo :attribute deve ser uma data no formato :format.',
@@ -43,7 +48,9 @@ return [
     'size' => [
         'string' => 'O campo :attribute deve ter :size caracteres.',
     ],
+    'regex' => 'O formato de :attribute é inválido.',
     'string' => 'O campo :attribute deve ser um texto.',
+    'ulid' => 'O campo :attribute deve ser um identificador válido.',
     'unique' => 'Este :attribute já está em uso.',
 
     'attributes' => [

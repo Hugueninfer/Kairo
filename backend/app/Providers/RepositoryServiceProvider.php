@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Repositories\Contracts\BoardElementRepository;
+use App\Repositories\Contracts\BoardRepository;
 use App\Repositories\Contracts\ClientRepository;
 use App\Repositories\Contracts\CompanyRepository;
 use App\Repositories\Contracts\ContractRepository;
@@ -17,6 +19,8 @@ use App\Repositories\Contracts\TaskRepository;
 use App\Repositories\Contracts\TimeEntryRepository;
 use App\Repositories\Contracts\UserRepository;
 use App\Repositories\Contracts\WebhookEventRepository;
+use App\Repositories\Eloquent\BoardElementRepositoryEloquent;
+use App\Repositories\Eloquent\BoardRepositoryEloquent;
 use App\Repositories\Eloquent\ClientRepositoryEloquent;
 use App\Repositories\Eloquent\CompanyRepositoryEloquent;
 use App\Repositories\Eloquent\ContractRepositoryEloquent;
@@ -59,5 +63,7 @@ class RepositoryServiceProvider extends ServiceProvider
         PaymentRepository::class => PaymentRepositoryEloquent::class,
         WebhookEventRepository::class => WebhookEventRepositoryEloquent::class,
         InvoiceReminderRepository::class => InvoiceReminderRepositoryEloquent::class,
+        BoardRepository::class => BoardRepositoryEloquent::class,
+        BoardElementRepository::class => BoardElementRepositoryEloquent::class,
     ];
 }
