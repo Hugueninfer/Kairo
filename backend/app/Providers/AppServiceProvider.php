@@ -61,6 +61,11 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('auth', function (Request $request) {
             return Limit::perMinute(6)->by($request->ip());
         });
+
+        // Links públicos (orçamento aberto pelo cliente): sem login, então limita por IP.
+        RateLimiter::for('public', function (Request $request) {
+            return Limit::perMinute(30)->by($request->ip());
+        });
     }
 
     private function configurePasswords(): void

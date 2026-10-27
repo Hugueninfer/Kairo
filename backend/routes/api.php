@@ -13,6 +13,9 @@ use App\Http\Controllers\Api\V1\OptionsController;
 use App\Http\Controllers\Api\V1\Projects\ClientController;
 use App\Http\Controllers\Api\V1\Projects\ProjectController;
 use App\Http\Controllers\Api\V1\Projects\TaskController;
+use App\Http\Controllers\Api\V1\Quotes\ContractController;
+use App\Http\Controllers\Api\V1\Quotes\PublicQuoteController;
+use App\Http\Controllers\Api\V1\Quotes\QuoteController;
 use App\Http\Controllers\Api\V1\Timesheet\TimeEntryController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +41,15 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::get('invitations/{token}', [InvitationController::class, 'show'])
         ->middleware('throttle:auth')
         ->name('invitations.show');
+
+    // Orçamento aberto pelo cliente pelo link do e-mail: sem login, só com a assinatura do link.
+    // GET e POST usam a mesma URL assinada, então o link do e-mail serve para ver e responder.
+    Route::prefix('public/quotes/{quote}')->name('public.quotes.')->middleware(['signed:relative', 'throttle:public'])
+        ->whereUlid('quote')
+        ->group(function (): void {
+            Route::get('/', [PublicQuoteController::class, 'show'])->name('show');
+            Route::post('/', [PublicQuoteController::class, 'decide'])->name('decide');
+        });
 
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('invitations/{token}/accept', [InvitationController::class, 'accept'])
@@ -122,6 +134,19 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
                 Route::put('{entry}', [TimeEntryController::class, 'update'])->name('update');
                 Route::delete('{entry}', [TimeEntryController::class, 'destroy'])->name('destroy');
             });
+
+            Route::get('quotes', [QuoteController::class, 'index'])->can(Permission::QuotesView->value)->name('quotes.index');
+            Route::get('quotes/{quote}', [QuoteController::class, 'show'])->can(Permission::QuotesView->value)->name('quotes.show');
+            Route::get('quotes/{quote}/pdf', [QuoteController::class, 'pdf'])->can(Permission::QuotesView->value)->name('quotes.pdf');
+            Route::post('quotes', [QuoteController::class, 'store'])->can(Permission::QuotesManage->value)->name('quotes.store');
+            Route::put('quotes/{quote}', [QuoteController::class, 'update'])->can(Permission::QuotesManage->value)->name('quotes.update');
+            Route::delete('quotes/{quote}', [QuoteController::class, 'destroy'])->can(Permission::QuotesManage->value)->name('quotes.destroy');
+            Route::post('quotes/{quote}/send', [QuoteController::class, 'send'])->can(Permission::QuotesManage->value)->name('quotes.send');
+            Route::post('quotes/{quote}/duplicate', [QuoteController::class, 'duplicate'])->can(Permission::QuotesManage->value)->name('quotes.duplicate');
+
+            Route::get('contracts', [ContractController::class, 'index'])->can(Permission::QuotesView->value)->name('contracts.index');
+            Route::get('contracts/{contract}', [ContractController::class, 'show'])->can(Permission::QuotesView->value)->name('contracts.show');
+            Route::put('contracts/{contract}/status', [ContractController::class, 'close'])->can(Permission::QuotesManage->value)->name('contracts.close');
 
             // Minhas tarefas: qualquer membro vê as próprias, sem permissão extra.
             Route::get('tasks/mine', [TaskController::class, 'mine'])->name('tasks.mine');

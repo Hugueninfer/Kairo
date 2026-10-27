@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\BillingType;
+use App\Enums\ContractStatus;
 use App\Enums\ProjectStatus;
+use App\Enums\QuoteItemType;
+use App\Enums\QuoteStatus;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
@@ -21,6 +24,9 @@ class OptionsController extends Controller
             'billing_types' => BillingType::options(),
             'task_statuses' => TaskStatus::options(),
             'task_priorities' => TaskPriority::options(),
+            'quote_statuses' => QuoteStatus::options(),
+            'quote_item_types' => QuoteItemType::options(),
+            'contract_statuses' => ContractStatus::options(),
         ]]);
     }
 }

@@ -51,6 +51,36 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresCompany: true, permission: 'projects.view' },
   },
   {
+    path: '/orcamentos',
+    name: 'quotes',
+    component: () => import('@/views/quotes/QuotesView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'quotes.view' },
+  },
+  {
+    path: '/orcamentos/novo',
+    name: 'quote-new',
+    component: () => import('@/views/quotes/QuoteEditorView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'quotes.manage' },
+  },
+  {
+    path: '/orcamentos/:id',
+    name: 'quote-edit',
+    component: () => import('@/views/quotes/QuoteEditorView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'quotes.view' },
+  },
+  {
+    path: '/contratos',
+    name: 'contracts',
+    component: () => import('@/views/quotes/ContractsView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'quotes.view' },
+  },
+  {
+    // Link do e-mail do cliente: público, a API confere a assinatura.
+    path: '/orcamento/:id',
+    name: 'public-quote',
+    component: () => import('@/views/quotes/PublicQuoteView.vue'),
+  },
+  {
     path: '/empresa/papeis',
     name: 'company-roles',
     component: () => import('@/views/companies/RolesView.vue'),

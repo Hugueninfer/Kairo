@@ -141,6 +141,9 @@ export interface Options {
   billing_types: Option<BillingType>[]
   task_statuses: Option<TaskStatus>[]
   task_priorities: Option<TaskPriority>[]
+  quote_statuses: Option<QuoteStatus>[]
+  quote_item_types: Option<QuoteItemType>[]
+  contract_statuses: Option<ContractStatus>[]
 }
 
 export type TimeEntryStatus = 'pending' | 'approved' | 'rejected'
@@ -172,4 +175,75 @@ export interface WeekSheet {
     total: number
   }[]
   totals: { minutes: number[]; total: number; billable_minutes: number; amount: string }
+}
+
+export type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected' | 'expired'
+export type QuoteItemType = 'fixed' | 'hourly'
+export type ContractStatus = 'active' | 'completed' | 'cancelled'
+
+export interface QuoteItem {
+  description: string
+  type: Option<QuoteItemType> & { unit: string }
+  quantity: string
+  unit_price: string
+  total: string
+}
+
+interface QuoteTotals {
+  subtotal: string
+  discount: string
+  tax_rate: string
+  tax_amount: string
+  total: string
+}
+
+export interface Quote extends QuoteTotals {
+  id: string
+  number: string
+  title: string
+  status: Option<QuoteStatus> & { is_decided: boolean }
+  valid_until: string
+  introduction: string | null
+  terms: string | null
+  sent_at: string | null
+  viewed_at: string | null
+  decided_at: string | null
+  signer_name: string | null
+  decision_note: string | null
+  client?: { id: string; name: string; email: string | null }
+  items?: QuoteItem[]
+  project?: { id: string; name: string } | null
+  contract?: { id: string; number: string } | null
+  created_at: string | null
+}
+
+/** O que o cliente vê pelo link público. */
+export interface PublicQuote extends QuoteTotals {
+  number: string
+  title: string
+  status: Option<QuoteStatus>
+  awaits_decision: boolean
+  valid_until: string
+  introduction: string | null
+  terms: string | null
+  currency: string
+  decided_at: string | null
+  signer_name: string | null
+  company: { name: string }
+  client: { name: string }
+  items: QuoteItem[]
+}
+
+export interface Contract {
+  id: string
+  number: string
+  title: string
+  status: Option<ContractStatus>
+  total: string
+  terms: string | null
+  signed_at: string
+  signer_name: string
+  client?: { id: string; name: string }
+  project?: { id: string; name: string } | null
+  quote?: { id: string; number: string }
 }
