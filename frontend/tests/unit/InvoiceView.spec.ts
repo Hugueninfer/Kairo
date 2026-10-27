@@ -16,6 +16,7 @@ function openInvoice(extra: Partial<Invoice> = {}): Invoice {
     status: { value: 'open', label: 'Em aberto', awaits_payment: true },
     issue_date: '2026-10-27',
     due_date: '2026-11-10',
+    billing_period_start: null,
     notes: null,
     subtotal: '1000.00',
     discount: '0.00',
@@ -82,5 +83,20 @@ describe('InvoiceView', () => {
 
     expect(record).toHaveBeenCalledWith('inv1', expect.objectContaining({ amount: '600.00', method: 'pix' }))
     expect(wrapper.get('[data-test="invoice-status"]').text()).toBe('Paga')
+  })
+
+  it('mostra o contrato recorrente e os lembretes já enviados', async () => {
+    vi.spyOn(invoicesApi, 'get').mockResolvedValue(
+      openInvoice({
+        contract: { id: 'ct1', number: 'CTR-2026-0001' },
+        billing_period_start: '2026-10-27',
+        reminders: [{ stage: { value: 'before_due', label: '3 dias antes do vencimento' }, sent_at: '2026-11-07T12:00:00Z' }],
+      }),
+    )
+
+    const wrapper = await mountView()
+
+    expect(wrapper.text()).toContain('contrato CTR-2026-0001 (cobrança recorrente)')
+    expect(wrapper.get('[data-test="reminders"]').text()).toContain('07/11/2026 · 3 dias antes do vencimento')
   })
 })

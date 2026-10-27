@@ -33,4 +33,11 @@ interface CompanyRepository extends RepositoryInterface
      * @return Collection<int, User>
      */
     public function members(Company $company): Collection;
+
+    /**
+     * Ids das empresas com a régua de lembretes ligada.
+     *
+     * @return \Illuminate\Support\Collection<int, int>
+     */
+    public function withRemindersEnabled(): \Illuminate\Support\Collection;
 }

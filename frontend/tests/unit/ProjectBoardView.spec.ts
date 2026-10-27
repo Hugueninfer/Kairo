@@ -21,6 +21,8 @@ const options: Options = {
   quote_statuses: [],
   invoice_statuses: [],
   payment_methods: [],
+  recurrence_frequencies: [],
+  reminder_stages: [],
   quote_item_types: [],
   contract_statuses: [],
 }

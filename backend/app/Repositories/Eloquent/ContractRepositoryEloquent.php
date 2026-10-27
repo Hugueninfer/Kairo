@@ -8,6 +8,7 @@ use App\Enums\ContractStatus;
 use App\Models\Contract;
 use App\Repositories\Contracts\ContractRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class ContractRepositoryEloquent extends BaseRepository implements ContractRepository
 {
@@ -55,5 +56,34 @@ class ContractRepositoryEloquent extends BaseRepository implements ContractRepos
         $contract->update(['status' => $status]);
 
         return $this->loadDetails($contract);
+    }
+
+    public function updateContract(Contract $contract, array $attributes): Contract
+    {
+        $contract->update($attributes);
+
+        return $this->loadDetails($contract);
+    }
+
+    public function dueForBilling(string $date): Collection
+    {
+        /** @var Collection<int, int> */
+        return Contract::query()
+            ->withoutGlobalScope('company')
+            ->where('status', ContractStatus::Active)
+            ->whereNotNull('billing_frequency')
+            ->whereDate('next_billing_on', '<=', $date)
+            ->orderBy('id')
+            ->pluck('id');
+    }
+
+    public function lockForBilling(int $id): ?Contract
+    {
+        return Contract::query()
+            ->withoutGlobalScope('company')
+            ->with(['company.owner', 'client'])
+            ->whereKey($id)
+            ->lockForUpdate()
+            ->first();
     }
 }

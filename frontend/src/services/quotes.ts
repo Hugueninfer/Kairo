@@ -1,5 +1,5 @@
 import { ensureCsrfCookie, http } from './http'
-import type { ApiResource, Contract, ContractStatus, Paginated, PublicQuote, Quote, QuoteItemType } from '@/types/api'
+import type { ApiResource, Contract, ContractStatus, RecurrenceFrequency, Paginated, PublicQuote, Quote, QuoteItemType } from '@/types/api'
 
 export interface QuoteItemPayload {
   description: string
@@ -72,6 +72,21 @@ export const contractsApi = {
     const { data } = await http.put<ApiResource<Contract>>(`/api/v1/company/contracts/${encodeURIComponent(id)}/status`, { status })
     return data.data
   },
+
+  /** Liga ou altera a cobrança recorrente. frequency null desliga. */
+  async recurrence(id: string, payload: RecurrencePayload): Promise<Contract> {
+    const { data } = await http.put<ApiResource<Contract>>(`/api/v1/company/contracts/${encodeURIComponent(id)}/recurrence`, payload)
+    return data.data
+  },
+}
+
+export interface RecurrencePayload {
+  frequency: RecurrenceFrequency | null
+  amount?: string
+  starts_on?: string
+  ends_on?: string | null
+  payment_term_days?: number
+  auto_send?: boolean
 }
 
 /**

@@ -192,7 +192,10 @@ onBeforeUnmount(() => clearTimeout(poll))
     <!-- Fatura enviada: link de pagamento, saldo e pagamentos -->
     <section v-if="invoice && !isDraft" class="grid gap-4 lg:grid-cols-3">
       <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:col-span-2" data-test="payment-box">
-        <p class="text-sm text-slate-500">{{ invoice.client?.name }} · vence {{ date(invoice.due_date) }}</p>
+        <p class="text-sm text-slate-500">
+          {{ invoice.client?.name }} · vence {{ date(invoice.due_date) }}
+          <template v-if="invoice.contract"> · contrato {{ invoice.contract.number }}<template v-if="invoice.billing_period_start"> (cobrança recorrente)</template></template>
+        </p>
         <div class="mt-2 flex flex-wrap items-end gap-6">
           <div>
             <p class="text-xs text-slate-500">Total</p>
@@ -242,6 +245,12 @@ onBeforeUnmount(() => clearTimeout(poll))
           <FormAlert v-if="Object.keys(payment.fieldErrors.value).length === 0" :message="payment.message.value" />
           <BaseButton :loading="payment.submitting.value">Registrar pagamento</BaseButton>
         </form>
+        <div v-if="invoice.reminders?.length" class="mt-4 border-t border-slate-100 pt-3" data-test="reminders">
+          <p class="mb-1 text-xs font-medium text-slate-600">Lembretes enviados ao cliente</p>
+          <ul class="space-y-0.5 text-xs text-slate-500">
+            <li v-for="reminder in invoice.reminders" :key="reminder.stage.value">{{ date(reminder.sent_at) }} · {{ reminder.stage.label }}</li>
+          </ul>
+        </div>
       </div>
     </section>
 

@@ -10,6 +10,7 @@ return [
     'confirmed' => 'A confirmação de :attribute não confere.',
     'date_format' => 'O campo :attribute deve ser uma data no formato :format.',
     'decimal' => 'O campo :attribute deve ter no máximo :decimal casas decimais.',
+    'distinct' => 'O campo :attribute tem um valor repetido.',
     'email' => 'O campo :attribute deve ser um e-mail válido.',
     'enum' => 'O valor de :attribute é inválido.',
     'exists' => 'O valor de :attribute não foi encontrado.',
@@ -35,8 +36,10 @@ return [
         'symbols' => 'O campo :attribute deve ter pelo menos um símbolo.',
         'uncompromised' => 'Esta :attribute apareceu em um vazamento de dados. Escolha outra.',
     ],
+    'present' => 'O campo :attribute precisa ser enviado.',
     'required' => 'O campo :attribute é obrigatório.',
     'required_if' => 'O campo :attribute é obrigatório.',
+    'required_with' => 'O campo :attribute é obrigatório.',
     'size' => [
         'string' => 'O campo :attribute deve ter :size caracteres.',
     ],

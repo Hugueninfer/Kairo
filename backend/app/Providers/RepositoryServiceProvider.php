@@ -6,6 +6,7 @@ use App\Repositories\Contracts\ClientRepository;
 use App\Repositories\Contracts\CompanyRepository;
 use App\Repositories\Contracts\ContractRepository;
 use App\Repositories\Contracts\InvitationRepository;
+use App\Repositories\Contracts\InvoiceReminderRepository;
 use App\Repositories\Contracts\InvoiceRepository;
 use App\Repositories\Contracts\PaymentRepository;
 use App\Repositories\Contracts\PermissionRepository;
@@ -20,6 +21,7 @@ use App\Repositories\Eloquent\ClientRepositoryEloquent;
 use App\Repositories\Eloquent\CompanyRepositoryEloquent;
 use App\Repositories\Eloquent\ContractRepositoryEloquent;
 use App\Repositories\Eloquent\InvitationRepositoryEloquent;
+use App\Repositories\Eloquent\InvoiceReminderRepositoryEloquent;
 use App\Repositories\Eloquent\InvoiceRepositoryEloquent;
 use App\Repositories\Eloquent\PaymentRepositoryEloquent;
 use App\Repositories\Eloquent\PermissionRepositoryEloquent;
@@ -56,5 +58,6 @@ class RepositoryServiceProvider extends ServiceProvider
         InvoiceRepository::class => InvoiceRepositoryEloquent::class,
         PaymentRepository::class => PaymentRepositoryEloquent::class,
         WebhookEventRepository::class => WebhookEventRepositoryEloquent::class,
+        InvoiceReminderRepository::class => InvoiceReminderRepositoryEloquent::class,
     ];
 }

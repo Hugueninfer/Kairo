@@ -146,6 +146,8 @@ export interface Options {
   contract_statuses: Option<ContractStatus>[]
   invoice_statuses: Option<InvoiceStatus>[]
   payment_methods: Option<PaymentMethod>[]
+  recurrence_frequencies: Option<RecurrenceFrequency>[]
+  reminder_stages: Option<ReminderStage>[]
 }
 
 export type TimeEntryStatus = 'pending' | 'approved' | 'rejected'
@@ -249,6 +251,26 @@ export interface Contract {
   client?: { id: string; name: string }
   project?: { id: string; name: string } | null
   quote?: { id: string; number: string }
+  recurrence: ContractRecurrence | null
+}
+
+export type RecurrenceFrequency = 'monthly' | 'quarterly' | 'yearly'
+
+export interface ContractRecurrence {
+  frequency: Option<RecurrenceFrequency>
+  amount: string
+  next_billing_on: string | null
+  ends_on: string | null
+  payment_term_days: number
+  auto_send: boolean
+}
+
+export type ReminderStage = 'before_due' | 'due_today' | 'overdue_3' | 'overdue_7'
+
+export interface BillingSettings {
+  reminders_enabled: boolean
+  reminder_stages: ReminderStage[]
+  reminder_message: string | null
 }
 
 export type InvoiceStatus = 'draft' | 'open' | 'partially_paid' | 'overdue' | 'paid' | 'cancelled'
@@ -275,6 +297,7 @@ export interface Invoice {
   status: Option<InvoiceStatus> & { awaits_payment: boolean }
   issue_date: string
   due_date: string
+  billing_period_start: string | null
   notes: string | null
   subtotal: string
   discount: string
@@ -289,6 +312,7 @@ export interface Invoice {
   contract?: { id: string; number: string } | null
   items?: InvoiceItem[]
   payments?: Payment[]
+  reminders?: { stage: Option<ReminderStage>; sent_at: string }[]
   time_entries_count?: number
 }
 

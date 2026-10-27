@@ -9,6 +9,8 @@ use App\Enums\PaymentMethod;
 use App\Enums\ProjectStatus;
 use App\Enums\QuoteItemType;
 use App\Enums\QuoteStatus;
+use App\Enums\RecurrenceFrequency;
+use App\Enums\ReminderStage;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
@@ -31,6 +33,8 @@ class OptionsController extends Controller
             'contract_statuses' => ContractStatus::options(),
             'invoice_statuses' => InvoiceStatus::options(),
             'payment_methods' => PaymentMethod::options(),
+            'recurrence_frequencies' => RecurrenceFrequency::options(),
+            'reminder_stages' => ReminderStage::options(),
         ]]);
     }
 }

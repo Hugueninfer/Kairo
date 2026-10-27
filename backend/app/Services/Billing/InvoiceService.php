@@ -44,6 +44,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
+use LogicException;
 
 /**
  * Faturas: criação (manual, por horas ou por contrato), envio com link de pagamento,
@@ -164,6 +165,28 @@ class InvoiceService
             'contract_id' => $contract->id,
             'due_date' => $data->due_date,
             'notes' => $data->notes,
+        ]);
+    }
+
+    /**
+     * Mensalidade (ou trimestre, ou ano) de um contrato recorrente. Chamado pelo RecurringBillingService.
+     */
+    public function createRecurring(Contract $contract, Carbon $periodStart): Invoice
+    {
+        $frequency = $contract->billing_frequency ?? throw new LogicException('Contrato sem recorrência.');
+        $client = $this->clientById($contract->client_id);
+
+        return $this->store(null, $client, [
+            new InvoiceItemData(
+                "Contrato {$contract->number} · {$contract->title} · {$frequency->label()} {$frequency->periodLabel($periodStart)}",
+                '1.00',
+                (string) $contract->recurring_amount,
+            ),
+        ], [
+            'project_id' => $contract->project_id,
+            'contract_id' => $contract->id,
+            'billing_period_start' => $periodStart->toDateString(),
+            'due_date' => $periodStart->copy()->addDays($contract->payment_term_days)->toDateString(),
         ]);
     }
 
@@ -380,7 +403,7 @@ class InvoiceService
      * @param  array<string, mixed>  $attributes
      * @param  list<int>  $timeEntryIds
      */
-    private function store(User $author, Client $client, array $items, array $attributes, string $discount = '0.00', array $timeEntryIds = []): Invoice
+    private function store(?User $author, Client $client, array $items, array $attributes, string $discount = '0.00', array $timeEntryIds = []): Invoice
     {
         [$rows, $totals] = $this->calculate($items, $discount);
         $company = $this->tenant->company();
@@ -389,7 +412,7 @@ class InvoiceService
             ...$attributes,
             ...$totals,
             'client_id' => $client->id,
-            'created_by' => $author->id,
+            'created_by' => $author?->id,
             'number' => $this->invoices->nextNumber($company->id, now($company->timezone)->year),
             'status' => InvoiceStatus::Draft,
             'issue_date' => now($company->timezone)->toDateString(),

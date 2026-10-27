@@ -10,7 +10,7 @@ class ContractNotActiveException extends BusinessException
 
     public function __construct()
     {
-        parent::__construct('Só contratos vigentes podem ser concluídos ou cancelados.');
+        parent::__construct('Só contratos vigentes podem ser alterados, concluídos ou cancelados.');
     }
 
     public function errorCode(): string
