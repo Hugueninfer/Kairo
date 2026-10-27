@@ -82,7 +82,7 @@ class SyncBoardElementsRequest extends FormRequest
                 z_index: (int) $element['z_index'],
                 props: self::props((array) $element['props']),
             ), $upserts),
-            deletes: array_values(array_map(fn (string $ulid) => strtolower($ulid), $deletes)),
+            deletes: array_map(fn (string $ulid) => strtolower($ulid), $deletes),
         );
     }
 
