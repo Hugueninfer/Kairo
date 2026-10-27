@@ -59,4 +59,12 @@ interface TimeEntryRepository extends RepositoryInterface
     public function review(Collection $entries, TimeEntryStatus $status, User $reviewer): int;
 
     public function deleteEntry(TimeEntry $entry): void;
+
+    /**
+     * Horas que podem ir para uma fatura: aprovadas, cobráveis, encerradas e ainda não
+     * faturadas, do projeto e do período, com a tarefa.
+     *
+     * @return Collection<int, TimeEntry>
+     */
+    public function billableForInvoice(int $projectId, Carbon $from, Carbon $to): Collection;
 }

@@ -95,11 +95,29 @@ class TimeEntryRepositoryEloquent extends BaseRepository implements TimeEntryRep
         return TimeEntry::query()
             ->whereKey($entries->modelKeys())
             ->whereNotNull('ended_at')
+            // Hora já faturada não muda mais de situação.
+            ->whereNull('invoice_id')
             ->update(['status' => $status, 'reviewed_by' => $reviewer->id, 'reviewed_at' => now()]);
     }
 
     public function deleteEntry(TimeEntry $entry): void
     {
         $entry->delete();
+    }
+
+    public function billableForInvoice(int $projectId, Carbon $from, Carbon $to): Collection
+    {
+        /** @var Collection<int, TimeEntry> */
+        return $this->filteredQuery()
+            ->with('task:id,title')
+            ->where('project_id', $projectId)
+            ->where('status', TimeEntryStatus::Approved)
+            ->where('billable', true)
+            ->whereNotNull('ended_at')
+            ->whereNull('invoice_id')
+            ->where('started_at', '>=', $from)
+            ->where('started_at', '<', $to)
+            ->orderBy('started_at')
+            ->get();
     }
 }

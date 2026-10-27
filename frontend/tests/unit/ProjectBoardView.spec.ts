@@ -19,6 +19,8 @@ const options: Options = {
   ],
   task_priorities: [{ value: 'medium', label: 'Média' }],
   quote_statuses: [],
+  invoice_statuses: [],
+  payment_methods: [],
   quote_item_types: [],
   contract_statuses: [],
 }

@@ -5,6 +5,7 @@
 return [
     'after_or_equal' => 'O campo :attribute deve ser uma data igual ou posterior a :date.',
     'array' => 'O campo :attribute deve ser uma lista.',
+    'before_or_equal' => 'O campo :attribute deve ser uma data igual ou anterior a :date.',
     'boolean' => 'O campo :attribute deve ser verdadeiro ou falso.',
     'confirmed' => 'A confirmação de :attribute não confere.',
     'date_format' => 'O campo :attribute deve ser uma data no formato :format.',

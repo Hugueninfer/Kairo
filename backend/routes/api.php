@@ -4,6 +4,8 @@ use App\Enums\Permission;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
+use App\Http\Controllers\Api\V1\Billing\InvoiceController;
+use App\Http\Controllers\Api\V1\Billing\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\Companies\CompanyController;
 use App\Http\Controllers\Api\V1\Companies\InvitationController;
 use App\Http\Controllers\Api\V1\Companies\MemberController;
@@ -50,6 +52,11 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::get('/', [PublicQuoteController::class, 'show'])->name('show');
             Route::post('/', [PublicQuoteController::class, 'decide'])->name('decide');
         });
+
+    // Avisos dos gateways de pagamento. A autenticidade é conferida pelo adaptador de cada gateway.
+    Route::post('webhooks/payments/{gateway}', PaymentWebhookController::class)
+        ->where('gateway', '[a-z_]+')
+        ->name('webhooks.payments');
 
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('invitations/{token}/accept', [InvitationController::class, 'accept'])
@@ -147,6 +154,20 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::get('contracts', [ContractController::class, 'index'])->can(Permission::QuotesView->value)->name('contracts.index');
             Route::get('contracts/{contract}', [ContractController::class, 'show'])->can(Permission::QuotesView->value)->name('contracts.show');
             Route::put('contracts/{contract}/status', [ContractController::class, 'close'])->can(Permission::QuotesManage->value)->name('contracts.close');
+
+            Route::prefix('invoices')->name('invoices.')->group(function (): void {
+                Route::get('/', [InvoiceController::class, 'index'])->can(Permission::InvoicesView->value)->name('index');
+                Route::post('/', [InvoiceController::class, 'store'])->can(Permission::InvoicesManage->value)->name('store');
+                Route::post('from-hours', [InvoiceController::class, 'fromHours'])->can(Permission::InvoicesManage->value)->name('from-hours');
+                Route::post('from-contract', [InvoiceController::class, 'fromContract'])->can(Permission::InvoicesManage->value)->name('from-contract');
+                Route::get('{invoice}', [InvoiceController::class, 'show'])->can(Permission::InvoicesView->value)->name('show');
+                Route::get('{invoice}/pdf', [InvoiceController::class, 'pdf'])->can(Permission::InvoicesView->value)->name('pdf');
+                Route::put('{invoice}', [InvoiceController::class, 'update'])->can(Permission::InvoicesManage->value)->name('update');
+                Route::delete('{invoice}', [InvoiceController::class, 'destroy'])->can(Permission::InvoicesManage->value)->name('destroy');
+                Route::post('{invoice}/send', [InvoiceController::class, 'send'])->can(Permission::InvoicesManage->value)->name('send');
+                Route::post('{invoice}/cancel', [InvoiceController::class, 'cancel'])->can(Permission::InvoicesManage->value)->name('cancel');
+                Route::post('{invoice}/payments', [InvoiceController::class, 'recordPayment'])->can(Permission::InvoicesManage->value)->name('payments.store');
+            });
 
             // Minhas tarefas: qualquer membro vê as próprias, sem permissão extra.
             Route::get('tasks/mine', [TaskController::class, 'mine'])->name('tasks.mine');

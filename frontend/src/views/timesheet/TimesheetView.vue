@@ -49,7 +49,7 @@ async function load() {
 }
 
 const exportUrl = computed(() => (sheet.value ? timesheetApi.exportUrl(sheet.value.days[0]!, sheet.value.days[6]!, who.value) : '#'))
-const reviewable = computed(() => entries.value.filter((entry) => !entry.is_running && entry.status.value !== 'approved'))
+const reviewable = computed(() => entries.value.filter((entry) => !entry.is_running && !entry.is_invoiced && entry.status.value !== 'approved'))
 
 function toggle(id: string) {
   const next = new Set(selected.value)
@@ -239,6 +239,7 @@ onMounted(async () => {
           >
             {{ entry.status.label }}
           </span>
+          <span v-if="entry.is_invoiced" class="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">Faturado</span>
           <template v-if="entry.user?.id === auth.user?.id && !entry.is_running && entry.status.value !== 'approved'">
             <button type="button" class="text-brand-600 hover:underline" @click="modal = { entry }">Editar</button>
             <button type="button" class="text-red-600 hover:underline" @click="remove(entry)">Apagar</button>

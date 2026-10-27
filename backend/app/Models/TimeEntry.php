@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $hourly_rate
  * @property TimeEntryStatus $status
  * @property Carbon|null $reviewed_at
+ * @property int|null $invoice_id
  */
 #[Fillable(['user_id', 'project_id', 'task_id', 'description', 'started_at', 'ended_at', 'duration_minutes', 'billable', 'hourly_rate', 'status', 'reviewed_by', 'reviewed_at'])]
 class TimeEntry extends Model

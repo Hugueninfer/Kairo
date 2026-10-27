@@ -27,6 +27,7 @@ class TimeEntryResource extends JsonResource
             'hourly_rate' => $this->hourly_rate,
             'amount' => $this->amount(),
             'status' => ['value' => $this->status->value, 'label' => $this->status->label()],
+            'is_invoiced' => $this->invoice_id !== null,
             'user' => $this->whenLoaded('user', fn () => ['id' => $this->user->id, 'name' => $this->user->name]),
             'project' => $this->whenLoaded('project', fn () => ['id' => $this->project->ulid, 'name' => $this->project->name]),
             'task' => $this->whenLoaded('task', fn () => $this->task === null ? null : ['id' => $this->task->ulid, 'title' => $this->task->title]),

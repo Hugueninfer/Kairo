@@ -14,6 +14,8 @@ interface ContractRepository extends RepositoryInterface
      */
     public function paginateFiltered(?string $search, ?ContractStatus $status, ?int $clientId, int $perPage): LengthAwarePaginator;
 
+    public function findByUlid(string $ulid): ?Contract;
+
     public function loadDetails(Contract $contract): Contract;
 
     /**

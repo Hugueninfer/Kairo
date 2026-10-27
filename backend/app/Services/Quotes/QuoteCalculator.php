@@ -4,6 +4,7 @@ namespace App\Services\Quotes;
 
 use App\DTOs\Quotes\QuoteData;
 use App\Exceptions\Quotes\DiscountTooHighException;
+use App\Support\Cents;
 
 /**
  * Calcula itens e totais do orçamento em centavos (inteiros), sem erro de arredondamento de float.
@@ -21,8 +22,7 @@ class QuoteCalculator
         $subtotal = 0;
 
         foreach ($data->items as $position => $item) {
-            // quantidade e preço com 2 casas: centavos x centésimos / 100.
-            $total = intdiv($this->cents($item->quantity) * $this->cents($item->unit_price) + 50, 100);
+            $total = Cents::times($item->quantity, $item->unit_price);
             $subtotal += $total;
 
             $items[] = [
@@ -31,43 +31,28 @@ class QuoteCalculator
                 'type' => $item->type,
                 'quantity' => $item->quantity,
                 'unit_price' => $item->unit_price,
-                'total' => $this->decimal($total),
+                'total' => Cents::toDecimal($total),
             ];
         }
 
-        $discount = $this->cents($data->discount);
+        $discount = Cents::from($data->discount);
 
         if ($discount > $subtotal) {
             throw new DiscountTooHighException;
         }
 
         $base = $subtotal - $discount;
-        $tax = intdiv($base * $this->cents($data->tax_rate) + 5000, 10000);
+        $tax = Cents::percent($base, $data->tax_rate);
 
         return [
             'items' => $items,
             'totals' => [
-                'subtotal' => $this->decimal($subtotal),
-                'discount' => $this->decimal($discount),
+                'subtotal' => Cents::toDecimal($subtotal),
+                'discount' => Cents::toDecimal($discount),
                 'tax_rate' => $data->tax_rate,
-                'tax_amount' => $this->decimal($tax),
-                'total' => $this->decimal($base + $tax),
+                'tax_amount' => Cents::toDecimal($tax),
+                'total' => Cents::toDecimal($base + $tax),
             ],
         ];
-    }
-
-    /**
-     * "12.5" → 1250. A entrada já vem validada como número com até 2 casas.
-     */
-    private function cents(string $value): int
-    {
-        [$whole, $fraction] = array_pad(explode('.', $value, 2), 2, '');
-
-        return (int) $whole * 100 + (int) str_pad(substr($fraction, 0, 2), 2, '0');
-    }
-
-    private function decimal(int $cents): string
-    {
-        return intdiv($cents, 100).'.'.str_pad((string) ($cents % 100), 2, '0', STR_PAD_LEFT);
     }
 }
