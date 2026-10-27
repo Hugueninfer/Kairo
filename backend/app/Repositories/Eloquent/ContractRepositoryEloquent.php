@@ -29,6 +29,12 @@ class ContractRepositoryEloquent extends BaseRepository implements ContractRepos
             ->withQueryString();
     }
 
+    public function findByUlid(string $ulid): ?Contract
+    {
+        /** @var Contract|null */
+        return $this->filteredQuery()->where('ulid', $ulid)->first();
+    }
+
     public function loadDetails(Contract $contract): Contract
     {
         return $contract->load(['client:id,ulid,name,deleted_at', 'project:id,ulid,name', 'quote:id,ulid,number']);

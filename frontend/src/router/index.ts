@@ -75,6 +75,24 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresCompany: true, permission: 'quotes.view' },
   },
   {
+    path: '/faturas',
+    name: 'invoices',
+    component: () => import('@/views/billing/InvoicesView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'invoices.view' },
+  },
+  {
+    path: '/faturas/nova',
+    name: 'invoice-new',
+    component: () => import('@/views/billing/InvoiceView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'invoices.manage' },
+  },
+  {
+    path: '/faturas/:id',
+    name: 'invoice',
+    component: () => import('@/views/billing/InvoiceView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'invoices.view' },
+  },
+  {
     // Link do e-mail do cliente: público, a API confere a assinatura.
     path: '/orcamento/:id',
     name: 'public-quote',

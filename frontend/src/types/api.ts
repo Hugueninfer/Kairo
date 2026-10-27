@@ -144,6 +144,8 @@ export interface Options {
   quote_statuses: Option<QuoteStatus>[]
   quote_item_types: Option<QuoteItemType>[]
   contract_statuses: Option<ContractStatus>[]
+  invoice_statuses: Option<InvoiceStatus>[]
+  payment_methods: Option<PaymentMethod>[]
 }
 
 export type TimeEntryStatus = 'pending' | 'approved' | 'rejected'
@@ -159,6 +161,7 @@ export interface TimeEntry {
   hourly_rate: string | null
   amount: string | null
   status: Option<TimeEntryStatus>
+  is_invoiced: boolean
   user?: { id: number; name: string }
   project?: { id: string; name: string }
   task?: { id: string; title: string } | null
@@ -246,4 +249,51 @@ export interface Contract {
   client?: { id: string; name: string }
   project?: { id: string; name: string } | null
   quote?: { id: string; number: string }
+}
+
+export type InvoiceStatus = 'draft' | 'open' | 'partially_paid' | 'overdue' | 'paid' | 'cancelled'
+export type PaymentMethod = 'pix' | 'boleto' | 'credit_card' | 'transfer' | 'cash' | 'other'
+
+export interface InvoiceItem {
+  description: string
+  quantity: string
+  unit_price: string
+  total: string
+}
+
+export interface Payment {
+  id: string
+  amount: string
+  method: Option<PaymentMethod>
+  paid_at: string
+  via_gateway: boolean
+}
+
+export interface Invoice {
+  id: string
+  number: string
+  status: Option<InvoiceStatus> & { awaits_payment: boolean }
+  issue_date: string
+  due_date: string
+  notes: string | null
+  subtotal: string
+  discount: string
+  total: string
+  amount_paid: string
+  payment_url: string | null
+  sent_at: string | null
+  paid_at: string | null
+  cancelled_at: string | null
+  client?: { id: string; name: string; email: string | null }
+  project?: { id: string; name: string } | null
+  contract?: { id: string; number: string } | null
+  items?: InvoiceItem[]
+  payments?: Payment[]
+  time_entries_count?: number
+}
+
+export interface InvoiceSummary {
+  receivable: string
+  overdue: string
+  received_this_month: string
 }

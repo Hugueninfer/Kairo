@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\BillingType;
 use App\Enums\ContractStatus;
+use App\Enums\InvoiceStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\ProjectStatus;
 use App\Enums\QuoteItemType;
 use App\Enums\QuoteStatus;
@@ -27,6 +29,8 @@ class OptionsController extends Controller
             'quote_statuses' => QuoteStatus::options(),
             'quote_item_types' => QuoteItemType::options(),
             'contract_statuses' => ContractStatus::options(),
+            'invoice_statuses' => InvoiceStatus::options(),
+            'payment_methods' => PaymentMethod::options(),
         ]]);
     }
 }
