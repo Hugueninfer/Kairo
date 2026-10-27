@@ -18,6 +18,9 @@ const options: Options = {
     { value: 'done', label: 'Concluída' },
   ],
   task_priorities: [{ value: 'medium', label: 'Média' }],
+  quote_statuses: [],
+  quote_item_types: [],
+  contract_statuses: [],
 }
 
 const project: Project = {

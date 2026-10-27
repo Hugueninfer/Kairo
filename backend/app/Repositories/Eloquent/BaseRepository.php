@@ -3,6 +3,7 @@
 namespace App\Repositories\Eloquent;
 
 use App\Criteria\CompanyCriteria;
+use App\Models\Company;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -42,5 +43,26 @@ abstract class BaseRepository extends PrettusBaseRepository
         }
 
         return $query;
+    }
+
+    /**
+     * Próximo número sequencial da empresa com o prefixo (ex.: ORC-2026-0007).
+     * Trava a linha da empresa para dois envios simultâneos não pegarem o mesmo número;
+     * precisa rodar dentro de uma transação. Conta também os registros apagados.
+     */
+    protected function nextSequence(int $companyId, string $prefix): string
+    {
+        Company::query()->whereKey($companyId)->lockForUpdate()->first();
+
+        /** @var Model $model */
+        $model = $this->app->make($this->model());
+        $last = $model->newQueryWithoutScopes()
+            ->where('company_id', $companyId)
+            ->where('number', 'like', $prefix.'%')
+            ->max('number');
+
+        $sequence = is_string($last) ? ((int) substr($last, strlen($prefix))) + 1 : 1;
+
+        return $prefix.str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
     }
 }

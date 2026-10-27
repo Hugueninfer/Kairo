@@ -45,6 +45,7 @@ async function logout() {
             <RouterLink to="/" class="hover:text-brand-600" active-class="font-semibold text-brand-600" exact-active-class="font-semibold text-brand-600">Painel</RouterLink>
             <RouterLink v-if="company.can('projects.view')" to="/projetos" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Projetos</RouterLink>
             <RouterLink v-if="company.can('projects.view')" to="/horas" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Horas</RouterLink>
+            <RouterLink v-if="company.can('quotes.view')" to="/orcamentos" class="hover:text-brand-600" :class="{ 'font-semibold text-brand-600': $route.path.startsWith('/orcamentos') || $route.path === '/contratos' }">Orçamentos</RouterLink>
             <RouterLink v-if="company.can('clients.view')" to="/clientes" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Clientes</RouterLink>
             <RouterLink to="/empresa" class="hover:text-brand-600" exact-active-class="font-semibold text-brand-600">Empresa</RouterLink>
             <RouterLink v-if="company.can('roles.manage')" to="/empresa/papeis" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Papéis</RouterLink>
