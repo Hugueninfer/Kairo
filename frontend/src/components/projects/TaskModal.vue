@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
 import { useApiForm } from '@/composables/useApiForm'
+import { toApiError } from '@/services/http'
 import { tasksApi } from '@/services/projects'
+import { useTimerStore } from '@/stores/timer'
 import type { Member, Options, Task, TaskPriority, TaskStatus } from '@/types/api'
 
 const props = defineProps<{
@@ -17,6 +19,19 @@ const props = defineProps<{
   canEdit: boolean
 }>()
 const emit = defineEmits<{ close: []; saved: [task: Task]; removed: [task: Task] }>()
+
+const timer = useTimerStore()
+const timerError = ref<string | null>(null)
+
+async function startTimer() {
+  if (!props.task) return
+  timerError.value = null
+  try {
+    await timer.start({ project_id: props.projectId, task_id: props.task.id, description: null })
+  } catch (failure) {
+    timerError.value = toApiError(failure).message
+  }
+}
 
 const save = useApiForm()
 const form = reactive({
@@ -92,6 +107,13 @@ async function remove() {
           <BaseButton :loading="save.submitting.value">Salvar</BaseButton>
         </div>
         <button v-if="task" type="button" class="text-sm text-red-600 hover:underline" @click="remove">Apagar</button>
+      </div>
+      <div v-if="task && task.status.value !== 'done'" class="flex items-center gap-3 border-t border-slate-100 pt-3 text-sm">
+        <span v-if="timer.running?.task?.id === task.id" class="font-medium text-emerald-700">⏱ Timer rodando nesta tarefa</span>
+        <button v-else type="button" class="font-semibold text-emerald-700 hover:underline" data-test="task-timer" @click="startTimer">
+          ▶ Iniciar timer nesta tarefa
+        </button>
+        <FormAlert :message="timerError" />
       </div>
     </form>
   </BaseModal>

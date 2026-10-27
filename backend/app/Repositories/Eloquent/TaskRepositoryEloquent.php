@@ -40,6 +40,12 @@ class TaskRepositoryEloquent extends BaseRepository implements TaskRepository
             ->get();
     }
 
+    public function findByUlid(string $ulid): ?Task
+    {
+        /** @var Task|null */
+        return $this->filteredQuery()->where('ulid', $ulid)->first();
+    }
+
     public function nextPosition(Project $project, TaskStatus $status): int
     {
         $max = $this->column($project->id, $status)->max('position');

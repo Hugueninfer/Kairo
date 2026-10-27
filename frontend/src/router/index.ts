@@ -45,6 +45,12 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresCompany: true, permission: 'projects.view' },
   },
   {
+    path: '/horas',
+    name: 'timesheet',
+    component: () => import('@/views/timesheet/TimesheetView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'projects.view' },
+  },
+  {
     path: '/empresa/papeis',
     name: 'company-roles',
     component: () => import('@/views/companies/RolesView.vue'),

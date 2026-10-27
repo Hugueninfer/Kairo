@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\OptionsController;
 use App\Http\Controllers\Api\V1\Projects\ClientController;
 use App\Http\Controllers\Api\V1\Projects\ProjectController;
 use App\Http\Controllers\Api\V1\Projects\TaskController;
+use App\Http\Controllers\Api\V1\Timesheet\TimeEntryController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->name('api.v1.')->group(function (): void {
@@ -105,6 +106,22 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::post('projects', [ProjectController::class, 'store'])->can(Permission::ProjectsManage->value)->name('projects.store');
             Route::put('projects/{project}', [ProjectController::class, 'update'])->can(Permission::ProjectsManage->value)->name('projects.update');
             Route::delete('projects/{project}', [ProjectController::class, 'destroy'])->can(Permission::ProjectsManage->value)->name('projects.destroy');
+
+            // Horas: cada um lança as próprias. Ver a equipe toda e aprovar exigem permissão.
+            Route::prefix('time-entries')->name('time-entries.')->middleware('can:'.Permission::ProjectsView->value)->group(function (): void {
+                Route::get('/', [TimeEntryController::class, 'index'])->name('index');
+                Route::get('week', [TimeEntryController::class, 'week'])->name('week');
+                Route::get('export', [TimeEntryController::class, 'export'])->name('export');
+                Route::post('/', [TimeEntryController::class, 'store'])->name('store');
+                Route::get('timer', [TimeEntryController::class, 'timer'])->name('timer');
+                Route::post('timer', [TimeEntryController::class, 'start'])->name('timer.start');
+                Route::delete('timer', [TimeEntryController::class, 'stop'])->name('timer.stop');
+                Route::post('review', [TimeEntryController::class, 'review'])
+                    ->can(Permission::TimesheetApprove->value)
+                    ->name('review');
+                Route::put('{entry}', [TimeEntryController::class, 'update'])->name('update');
+                Route::delete('{entry}', [TimeEntryController::class, 'destroy'])->name('destroy');
+            });
 
             // Minhas tarefas: qualquer membro vê as próprias, sem permissão extra.
             Route::get('tasks/mine', [TaskController::class, 'mine'])->name('tasks.mine');

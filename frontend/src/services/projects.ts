@@ -31,7 +31,7 @@ export const projectsApi = {
     return data.data
   },
 
-  async list(params: { search?: string; status?: string; client?: string; page?: number } = {}): Promise<Paginated<Project>> {
+  async list(params: { search?: string; status?: string; client?: string; page?: number; per_page?: number } = {}): Promise<Paginated<Project>> {
     const { data } = await http.get<Paginated<Project>>('/api/v1/company/projects', { params })
     return data
   },

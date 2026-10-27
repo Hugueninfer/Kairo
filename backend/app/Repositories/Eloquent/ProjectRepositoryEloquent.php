@@ -32,6 +32,12 @@ class ProjectRepositoryEloquent extends BaseRepository implements ProjectReposit
             ->withQueryString();
     }
 
+    public function findByUlid(string $ulid): ?Project
+    {
+        /** @var Project|null */
+        return $this->filteredQuery()->where('ulid', $ulid)->first();
+    }
+
     public function loadDetails(Project $project): Project
     {
         return $project->load('client:id,ulid,name')->loadCount($this->taskCounts());
