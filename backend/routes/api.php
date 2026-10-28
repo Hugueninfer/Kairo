@@ -23,6 +23,9 @@ use App\Http\Controllers\Api\V1\Projects\TaskController;
 use App\Http\Controllers\Api\V1\Quotes\ContractController;
 use App\Http\Controllers\Api\V1\Quotes\PublicQuoteController;
 use App\Http\Controllers\Api\V1\Quotes\QuoteController;
+use App\Http\Controllers\Api\V1\Reports\AuditController;
+use App\Http\Controllers\Api\V1\Reports\DashboardController;
+use App\Http\Controllers\Api\V1\Reports\HoursReportController;
 use App\Http\Controllers\Api\V1\Timesheet\TimeEntryController;
 use Illuminate\Support\Facades\Route;
 
@@ -183,6 +186,10 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
                 Route::post('{invoice}/cancel', [InvoiceController::class, 'cancel'])->can(Permission::InvoicesManage->value)->name('cancel');
                 Route::post('{invoice}/payments', [InvoiceController::class, 'recordPayment'])->can(Permission::InvoicesManage->value)->name('payments.store');
             });
+
+            Route::get('dashboard', DashboardController::class)->name('dashboard');
+            Route::get('reports/hours', HoursReportController::class)->can(Permission::ReportsView->value)->name('reports.hours');
+            Route::get('audit', [AuditController::class, 'index'])->can(Permission::AuditView->value)->name('audit.index');
 
             Route::prefix('boards')->name('boards.')->group(function (): void {
                 Route::get('/', [BoardController::class, 'index'])->can(Permission::BoardsView->value)->name('index');

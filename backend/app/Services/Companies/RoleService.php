@@ -3,6 +3,7 @@
 namespace App\Services\Companies;
 
 use App\DTOs\Roles\RoleData;
+use App\Enums\AuditSubject;
 use App\Enums\Permission;
 use App\Enums\SystemRole;
 use App\Exceptions\Companies\NotCompanyMemberException;
@@ -17,6 +18,7 @@ use App\Models\User;
 use App\Repositories\Contracts\CompanyRepository;
 use App\Repositories\Contracts\PermissionRepository;
 use App\Repositories\Contracts\RoleRepository;
+use App\Services\Audit\AuditService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -32,6 +34,7 @@ class RoleService
         private readonly RoleRepository $roles,
         private readonly PermissionRepository $permissions,
         private readonly CompanyRepository $companies,
+        private readonly AuditService $audit,
     ) {}
 
     /**
@@ -99,6 +102,7 @@ class RoleService
         }
 
         $role = $this->roles->createForCompany($company, $data->name, $data->permissionNames());
+        $this->audit->record($company->id, AuditSubject::Role, 'created', $role->name, new: ['permissions' => $this->labels($data->permissionNames())]);
 
         return $role->load('permissions:id,name')->loadCount('members');
     }
@@ -118,7 +122,30 @@ class RoleService
             throw new RoleNameTakenException;
         }
 
-        return $this->roles->updateRole($role, $name, $data->permissionNames());
+        $before = $this->roles->permissionNamesOfRole($role);
+        $oldName = $role->name;
+        $updated = $this->roles->updateRole($role, $name, $data->permissionNames());
+
+        $added = array_values(array_diff($data->permissionNames(), $before));
+        $removed = array_values(array_diff($before, $data->permissionNames()));
+        $changes = array_filter([
+            'name' => $oldName === $name ? null : [$oldName, $name],
+            'permissions_added' => $added === [] ? null : [null, $this->labels($added)],
+            'permissions_removed' => $removed === [] ? null : [null, $this->labels($removed)],
+        ]);
+
+        if ($changes !== []) {
+            $this->audit->record(
+                $company->id,
+                AuditSubject::Role,
+                'updated',
+                $name,
+                array_map(fn (array $change) => $change[0], $changes),
+                array_map(fn (array $change) => $change[1], $changes),
+            );
+        }
+
+        return $updated;
     }
 
     public function delete(Role $role): void
@@ -132,6 +159,7 @@ class RoleService
         }
 
         $this->roles->deleteRole($role);
+        $this->audit->record((int) $role->company_id, AuditSubject::Role, 'deleted', $role->name);
     }
 
     /**
@@ -160,7 +188,12 @@ class RoleService
             throw new OwnerRoleReservedException;
         }
 
+        $previous = $this->roles->roleOf($member, $company);
         $this->roles->assign($member, $role);
+
+        if ($previous?->id !== $role->id) {
+            $this->audit->record($company->id, AuditSubject::Member, 'updated', $member->name, ['role' => $previous?->name], ['role' => $role->name]);
+        }
     }
 
     /**
@@ -197,5 +230,18 @@ class RoleService
         }
 
         return $this->roles->permissionNamesOf($user, $company);
+    }
+
+    /**
+     * Nomes das permissões em português, para o histórico.
+     *
+     * @param  list<string>  $names
+     */
+    private function labels(array $names): string
+    {
+        $labels = array_map(fn (string $name) => Permission::tryFrom($name)?->label() ?? $name, $names);
+        sort($labels);
+
+        return implode(', ', $labels);
     }
 }

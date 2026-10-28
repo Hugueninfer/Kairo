@@ -81,6 +81,12 @@ class RoleRepositoryEloquent extends BaseRepository implements RoleRepository
         });
     }
 
+    public function permissionNamesOfRole(Role $role): array
+    {
+        /** @var list<string> */
+        return $role->permissions()->pluck('name')->sort()->values()->all();
+    }
+
     public function deleteRole(Role $role): void
     {
         $role->delete();

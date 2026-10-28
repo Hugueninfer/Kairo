@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\AuditSubject;
 use App\Enums\BillingType;
 use App\Enums\ProjectStatus;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\LogsCompanyActivity;
 use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -27,7 +29,7 @@ use Illuminate\Support\Carbon;
 class Project extends Model
 {
     /** @use HasFactory<ProjectFactory> */
-    use BelongsToCompany, HasFactory, HasUlids, SoftDeletes;
+    use BelongsToCompany, HasFactory, HasUlids, LogsCompanyActivity, SoftDeletes;
 
     /**
      * @return list<string>
@@ -71,5 +73,23 @@ class Project extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    public static function auditSubject(): AuditSubject
+    {
+        return AuditSubject::Project;
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function auditedAttributes(): array
+    {
+        return ['name', 'status', 'billing_type', 'hourly_rate', 'budget', 'starts_on', 'due_on'];
+    }
+
+    public function auditLabel(): string
+    {
+        return $this->name;
     }
 }

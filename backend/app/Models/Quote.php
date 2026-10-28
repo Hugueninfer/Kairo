@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\AuditSubject;
 use App\Enums\QuoteStatus;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\LogsCompanyActivity;
 use Database\Factories\QuoteFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -35,7 +37,7 @@ use Illuminate\Support\Carbon;
 class Quote extends Model
 {
     /** @use HasFactory<QuoteFactory> */
-    use BelongsToCompany, HasFactory, HasUlids, SoftDeletes;
+    use BelongsToCompany, HasFactory, HasUlids, LogsCompanyActivity, SoftDeletes;
 
     /**
      * @return list<string>
@@ -107,5 +109,23 @@ class Quote extends Model
     public function contract(): HasOne
     {
         return $this->hasOne(Contract::class);
+    }
+
+    public static function auditSubject(): AuditSubject
+    {
+        return AuditSubject::Quote;
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function auditedAttributes(): array
+    {
+        return ['title', 'status', 'valid_until', 'total'];
+    }
+
+    public function auditLabel(): string
+    {
+        return trim($this->number.' '.$this->title);
     }
 }

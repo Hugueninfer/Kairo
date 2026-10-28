@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\AuditSubject;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\LogsCompanyActivity;
 use Database\Factories\TaskFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -27,7 +29,7 @@ use Illuminate\Support\Carbon;
 class Task extends Model
 {
     /** @use HasFactory<TaskFactory> */
-    use BelongsToCompany, HasFactory, HasUlids, SoftDeletes;
+    use BelongsToCompany, HasFactory, HasUlids, LogsCompanyActivity, SoftDeletes;
 
     /**
      * @return list<string>
@@ -77,5 +79,23 @@ class Task extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public static function auditSubject(): AuditSubject
+    {
+        return AuditSubject::Task;
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function auditedAttributes(): array
+    {
+        return ['title', 'status', 'priority', 'estimate_minutes', 'due_on'];
+    }
+
+    public function auditLabel(): string
+    {
+        return $this->title;
     }
 }

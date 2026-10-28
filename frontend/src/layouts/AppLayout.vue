@@ -40,16 +40,18 @@ async function logout() {
 <template>
   <div class="min-h-screen">
     <header class="border-b border-slate-200 bg-white">
-      <div class="mx-auto flex flex-wrap items-center justify-between gap-3 px-4 py-3" :class="wide ? 'max-w-7xl' : 'max-w-5xl'">
-        <div class="flex items-center gap-6">
+      <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <div class="flex items-center gap-5">
           <RouterLink to="/" class="text-lg font-bold text-brand-600">Kairo</RouterLink>
-          <nav class="flex gap-4 text-sm text-slate-600">
+          <nav class="flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-600">
             <RouterLink to="/" class="hover:text-brand-600" active-class="font-semibold text-brand-600" exact-active-class="font-semibold text-brand-600">Painel</RouterLink>
             <RouterLink v-if="company.can('projects.view')" to="/projetos" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Projetos</RouterLink>
             <RouterLink v-if="company.can('projects.view')" to="/horas" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Horas</RouterLink>
             <RouterLink v-if="company.can('quotes.view')" to="/orcamentos" class="hover:text-brand-600" :class="{ 'font-semibold text-brand-600': $route.path.startsWith('/orcamentos') || $route.path === '/contratos' }">Orçamentos</RouterLink>
             <RouterLink v-if="company.can('invoices.view')" to="/faturas" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Faturas</RouterLink>
             <RouterLink v-if="company.can('boards.view')" to="/boards" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Boards</RouterLink>
+            <RouterLink v-if="company.can('reports.view')" to="/relatorios" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Relatórios</RouterLink>
+            <RouterLink v-if="company.can('audit.view')" to="/historico" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Histórico</RouterLink>
             <RouterLink v-if="company.can('clients.view')" to="/clientes" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Clientes</RouterLink>
             <RouterLink to="/empresa" class="hover:text-brand-600" exact-active-class="font-semibold text-brand-600">Empresa</RouterLink>
             <RouterLink v-if="company.can('roles.manage')" to="/empresa/papeis" class="hover:text-brand-600" active-class="font-semibold text-brand-600">Papéis</RouterLink>

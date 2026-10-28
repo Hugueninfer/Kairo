@@ -79,3 +79,9 @@ As regras de camada são checadas por testes de arquitetura em `backend/tests/Ar
 - O link de leitura para o cliente (`/b/{token}`) abre sem login e pode ser desligado a qualquer momento. Quem abre por ele não entra no canal ao vivo; a página se atualiza a cada 30 segundos.
 - Sem `VITE_REVERB_APP_KEY` no front, os boards funcionam normalmente, só sem colaboração ao vivo.
 
+
+## Painel, relatórios e histórico
+
+- O painel (`GET /api/v1/company/dashboard`) mostra só o que o papel permite: as horas da pessoa sempre; as da equipe com `timesheet.view_all`; recebido, a receber, vencido, a receita dos últimos 6 meses e os projetos perto de estourar o orçamento com `invoices.view`. Fica em cache por 60 segundos.
+- O relatório de horas (`GET /api/v1/company/reports/hours`, por projeto, pessoa ou cliente) é calculado na fila. Enquanto não fica pronto, a API responde `202` e o front pergunta de novo a cada segundo. O resultado fica em cache e é recalculado sozinho quando alguma hora muda. O CSV é gerado no navegador.
+- O histórico de alterações (`GET /api/v1/company/audit`, permissão `audit.view`) usa o spatie/laravel-activitylog: clientes, projetos, tarefas, orçamentos, contratos, faturas, pagamentos, boards, papéis e membros. Cada registro guarda a empresa, quem fez e os campos que mudaram. Registros com mais de um ano são apagados todo dia às 03:30 (`activitylog:clean`).

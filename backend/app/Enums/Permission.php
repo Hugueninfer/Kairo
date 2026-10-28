@@ -40,6 +40,7 @@ enum Permission: string implements HasLabel
     case BoardsManage = 'boards.manage';
 
     case ReportsView = 'reports.view';
+    case AuditView = 'audit.view';
 
     public function label(): string
     {
@@ -63,6 +64,7 @@ enum Permission: string implements HasLabel
             self::BoardsView => 'Ver boards',
             self::BoardsManage => 'Criar e editar boards',
             self::ReportsView => 'Ver relatórios',
+            self::AuditView => 'Ver o histórico de alterações',
         };
     }
 
@@ -80,7 +82,7 @@ enum Permission: string implements HasLabel
             self::QuotesView, self::QuotesManage => 'Orçamentos e contratos',
             self::InvoicesView, self::InvoicesManage => 'Financeiro',
             self::BoardsView, self::BoardsManage => 'Boards',
-            self::ReportsView => 'Relatórios',
+            self::ReportsView, self::AuditView => 'Relatórios e histórico',
         };
     }
 }

@@ -36,6 +36,11 @@ interface RoleRepository extends RepositoryInterface
 
     public function deleteRole(Role $role): void;
 
+    /**
+     * @return list<string>
+     */
+    public function permissionNamesOfRole(Role $role): array;
+
     public function membersCount(Role $role): int;
 
     /**

@@ -2,12 +2,14 @@
 
 namespace App\Services\Companies;
 
+use App\Enums\AuditSubject;
 use App\Exceptions\Companies\CannotRemoveOwnerException;
 use App\Exceptions\Companies\NotCompanyMemberException;
 use App\Models\Company;
 use App\Models\User;
 use App\Repositories\Contracts\CompanyRepository;
 use App\Repositories\Contracts\UserRepository;
+use App\Services\Audit\AuditService;
 use App\Support\Transactions\TransactionManager;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -18,6 +20,7 @@ class MembershipService
         private readonly UserRepository $users,
         private readonly RoleService $roles,
         private readonly TransactionManager $transaction,
+        private readonly AuditService $audit,
     ) {}
 
     /**
@@ -46,5 +49,7 @@ class MembershipService
                 $this->users->setCurrentCompany($member, null);
             }
         });
+
+        $this->audit->record($company->id, AuditSubject::Member, 'removed', $member->name);
     }
 }

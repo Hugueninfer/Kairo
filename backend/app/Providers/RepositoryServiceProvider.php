@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Repositories\Contracts\ActivityRepository;
 use App\Repositories\Contracts\BoardElementRepository;
 use App\Repositories\Contracts\BoardRepository;
 use App\Repositories\Contracts\BoardVersionRepository;
@@ -15,11 +16,13 @@ use App\Repositories\Contracts\PaymentRepository;
 use App\Repositories\Contracts\PermissionRepository;
 use App\Repositories\Contracts\ProjectRepository;
 use App\Repositories\Contracts\QuoteRepository;
+use App\Repositories\Contracts\ReportRepository;
 use App\Repositories\Contracts\RoleRepository;
 use App\Repositories\Contracts\TaskRepository;
 use App\Repositories\Contracts\TimeEntryRepository;
 use App\Repositories\Contracts\UserRepository;
 use App\Repositories\Contracts\WebhookEventRepository;
+use App\Repositories\Eloquent\ActivityRepositoryEloquent;
 use App\Repositories\Eloquent\BoardElementRepositoryEloquent;
 use App\Repositories\Eloquent\BoardRepositoryEloquent;
 use App\Repositories\Eloquent\BoardVersionRepositoryEloquent;
@@ -33,6 +36,7 @@ use App\Repositories\Eloquent\PaymentRepositoryEloquent;
 use App\Repositories\Eloquent\PermissionRepositoryEloquent;
 use App\Repositories\Eloquent\ProjectRepositoryEloquent;
 use App\Repositories\Eloquent\QuoteRepositoryEloquent;
+use App\Repositories\Eloquent\ReportRepositoryEloquent;
 use App\Repositories\Eloquent\RoleRepositoryEloquent;
 use App\Repositories\Eloquent\TaskRepositoryEloquent;
 use App\Repositories\Eloquent\TimeEntryRepositoryEloquent;
@@ -65,7 +69,9 @@ class RepositoryServiceProvider extends ServiceProvider
         PaymentRepository::class => PaymentRepositoryEloquent::class,
         WebhookEventRepository::class => WebhookEventRepositoryEloquent::class,
         InvoiceReminderRepository::class => InvoiceReminderRepositoryEloquent::class,
+        ActivityRepository::class => ActivityRepositoryEloquent::class,
         BoardRepository::class => BoardRepositoryEloquent::class,
+        ReportRepository::class => ReportRepositoryEloquent::class,
         BoardElementRepository::class => BoardElementRepositoryEloquent::class,
         BoardVersionRepository::class => BoardVersionRepositoryEloquent::class,
     ];

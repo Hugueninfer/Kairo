@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\AuditSubject;
 use App\Enums\BillingType;
 use App\Enums\ContractStatus;
 use App\Enums\InvoiceStatus;
@@ -35,6 +36,7 @@ class OptionsController extends Controller
             'payment_methods' => PaymentMethod::options(),
             'recurrence_frequencies' => RecurrenceFrequency::options(),
             'reminder_stages' => ReminderStage::options(),
+            'audit_subjects' => AuditSubject::options(),
         ]]);
     }
 }
