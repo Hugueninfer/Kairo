@@ -50,33 +50,33 @@ onMounted(async () => {
   <BaseModal title="Lembretes de cobrança" @close="emit('close')">
     <FormAlert :message="loadError" />
     <form v-if="loaded" class="space-y-4" novalidate @submit.prevent="submit">
-      <p class="text-sm text-slate-600">
+      <p class="text-sm text-fg-muted">
         O Kairo manda um e-mail com o link de pagamento para o cliente de cada fatura em aberto, às 9h, nos dias que você marcar.
       </p>
       <FormAlert v-if="Object.keys(save.fieldErrors.value).length === 0" :message="save.message.value" />
       <FormAlert :message="saved" variant="success" />
       <fieldset :disabled="!canManage" class="space-y-4">
         <label class="flex items-center gap-2 text-sm font-medium">
-          <input v-model="form.reminders_enabled" type="checkbox" class="rounded border-slate-300" data-test="reminders-enabled" />
+          <input v-model="form.reminders_enabled" type="checkbox" class="h-4 w-4 rounded" data-test="reminders-enabled" />
           Enviar lembretes automáticos
         </label>
-        <div :class="{ 'opacity-50': !form.reminders_enabled }" class="space-y-2 rounded-lg bg-slate-50 p-3" data-test="stages">
+        <div :class="{ 'opacity-50': !form.reminders_enabled }" class="space-y-2 rounded-lg bg-surface-2 p-3" data-test="stages">
           <label v-for="option in options?.reminder_stages ?? []" :key="option.value" class="flex items-center gap-2 text-sm">
-            <input v-model="form.reminder_stages" type="checkbox" :value="option.value" :disabled="!form.reminders_enabled" class="rounded border-slate-300" />
+            <input v-model="form.reminder_stages" type="checkbox" :value="option.value" :disabled="!form.reminders_enabled" class="h-4 w-4 rounded" />
             {{ option.label }}
           </label>
         </div>
         <div>
-          <label for="reminder-message" class="mb-1 block text-sm font-medium text-slate-700">Recado no e-mail (opcional)</label>
+          <label for="reminder-message" class="field-label">Recado no e-mail (opcional)</label>
           <textarea
             id="reminder-message"
             v-model="form.reminder_message"
             rows="3"
             maxlength="1000"
             placeholder="Ex.: Qualquer dúvida, é só responder este e-mail."
-            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            class="field w-full"
           />
-          <p v-if="save.fieldErrors.value.reminder_message" class="mt-1 text-xs text-red-600">{{ save.fieldErrors.value.reminder_message }}</p>
+          <p v-if="save.fieldErrors.value.reminder_message" class="mt-1 text-xs text-red-400">{{ save.fieldErrors.value.reminder_message }}</p>
         </div>
       </fieldset>
       <BaseButton v-if="canManage" :loading="save.submitting.value">Salvar</BaseButton>

@@ -4,6 +4,10 @@ import { useRoute, useRouter } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import StatusBadge from '@/components/ui/StatusBadge.vue'
+import { statusTone } from '@/composables/statusTone'
 import { formatMoney, fromCents, quoteTotals, toCents } from '@/composables/money'
 import { addDays, isoDate } from '@/composables/time'
 import { useApiForm } from '@/composables/useApiForm'
@@ -172,82 +176,84 @@ onBeforeUnmount(() => clearTimeout(poll))
 
 <template>
   <AppLayout>
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <RouterLink :to="{ name: 'invoices' }" class="text-sm text-brand-600 hover:underline">‹ Faturas</RouterLink>
-        <h1 class="text-2xl font-semibold">
+    <PageHeader
+      :title="invoice ? `Fatura ${invoice.number}` : 'Nova fatura'"
+      :breadcrumbs="[{ label: 'Faturas', to: { name: 'invoices' } }, { label: invoice ? invoice.number : 'Nova' }]"
+    >
+      <template #title>
+        <span class="flex flex-wrap items-center gap-3">
           {{ invoice ? `Fatura ${invoice.number}` : 'Nova fatura' }}
-          <span v-if="invoice" class="ml-2 rounded bg-slate-100 px-2 py-0.5 align-middle text-xs font-normal text-slate-600" data-test="invoice-status">{{ invoice.status.label }}</span>
-        </h1>
-      </div>
-      <div v-if="invoice" class="flex flex-wrap gap-3 text-sm">
-        <a :href="invoicesApi.pdfUrl(invoice.id)" class="text-brand-600 hover:underline">Baixar PDF</a>
-        <button v-if="canManage && isDraft" type="button" class="text-red-600 hover:underline" :disabled="busy" @click="remove">Apagar rascunho</button>
-        <button v-if="canManage && invoice.status.awaits_payment && invoice.amount_paid === '0.00'" type="button" class="text-red-600 hover:underline" :disabled="busy" @click="cancel">Cancelar fatura</button>
-      </div>
-    </div>
+          <StatusBadge v-if="invoice" :tone="statusTone('invoice', invoice.status.value)" class="align-middle" data-test="invoice-status">{{ invoice.status.label }}</StatusBadge>
+        </span>
+      </template>
+      <template v-if="invoice" #actions>
+        <a :href="invoicesApi.pdfUrl(invoice.id)" class="btn-secondary"><AppIcon name="download" :size="16" />Baixar PDF</a>
+        <button v-if="canManage && isDraft" type="button" class="btn-danger" :disabled="busy" @click="remove"><AppIcon name="trash" :size="16" />Apagar rascunho</button>
+        <button v-if="canManage && invoice.status.awaits_payment && invoice.amount_paid === '0.00'" type="button" class="btn-danger" :disabled="busy" @click="cancel">Cancelar fatura</button>
+      </template>
+    </PageHeader>
 
     <FormAlert :message="loadError" />
 
     <!-- Fatura enviada: link de pagamento, saldo e pagamentos -->
     <section v-if="invoice && !isDraft" class="grid gap-4 lg:grid-cols-3">
-      <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:col-span-2" data-test="payment-box">
-        <p class="text-sm text-slate-500">
+      <div class="card p-5 lg:col-span-2" data-test="payment-box">
+        <p class="text-sm text-fg-muted">
           {{ invoice.client?.name }} · vence {{ date(invoice.due_date) }}
           <template v-if="invoice.contract"> · contrato {{ invoice.contract.number }}<template v-if="invoice.billing_period_start"> (cobrança recorrente)</template></template>
         </p>
-        <div class="mt-2 flex flex-wrap items-end gap-6">
+        <div class="mt-3 flex flex-wrap items-end gap-x-10 gap-y-4">
           <div>
-            <p class="text-xs text-slate-500">Total</p>
-            <p class="text-2xl font-semibold tabular-nums">{{ money(invoice.total) }}</p>
+            <p class="text-xs text-fg-muted">Total</p>
+            <p class="text-2xl font-semibold tracking-tight tabular-nums">{{ money(invoice.total) }}</p>
           </div>
           <div>
-            <p class="text-xs text-slate-500">Recebido</p>
-            <p class="text-2xl font-semibold tabular-nums text-emerald-700">{{ money(invoice.amount_paid) }}</p>
+            <p class="text-xs text-fg-muted">Recebido</p>
+            <p class="text-2xl font-semibold tabular-nums text-emerald-400">{{ money(invoice.amount_paid) }}</p>
           </div>
           <div v-if="invoice.status.awaits_payment">
-            <p class="text-xs text-slate-500">Saldo</p>
-            <p class="text-2xl font-semibold tabular-nums" :class="invoice.status.value === 'overdue' ? 'text-red-600' : ''">{{ money(balance) }}</p>
+            <p class="text-xs text-fg-muted">Saldo</p>
+            <p class="text-2xl font-semibold tabular-nums" :class="invoice.status.value === 'overdue' ? 'text-red-400' : ''">{{ money(balance) }}</p>
           </div>
         </div>
-        <div v-if="invoice.status.awaits_payment" class="mt-4 rounded-xl bg-slate-50 p-3 text-sm">
+        <div v-if="invoice.status.awaits_payment" class="mt-5 rounded-lg border border-line bg-surface-2 p-3 text-sm">
           <template v-if="invoice.payment_url">
-            <p class="mb-1 font-medium">Link de pagamento (Pix, boleto ou cartão)</p>
+            <p class="mb-1.5 flex items-center gap-2 font-medium"><AppIcon name="link" :size="15" class="text-brand-400" />Link de pagamento (Pix, boleto ou cartão)</p>
             <div class="flex flex-wrap items-center gap-2">
-              <a :href="invoice.payment_url" target="_blank" rel="noopener" class="truncate text-brand-600 hover:underline" data-test="payment-url">{{ invoice.payment_url }}</a>
-              <button type="button" class="rounded border border-slate-300 px-2 py-0.5 text-xs hover:bg-white" @click="copyLink">{{ copied ? 'Copiado!' : 'Copiar' }}</button>
+              <a :href="invoice.payment_url" target="_blank" rel="noopener" class="link truncate" data-test="payment-url">{{ invoice.payment_url }}</a>
+              <button type="button" class="btn-secondary btn-sm" @click="copyLink">{{ copied ? 'Copiado!' : 'Copiar' }}</button>
             </div>
           </template>
-          <p v-else class="text-slate-500">Gerando o link de pagamento no gateway…</p>
+          <p v-else class="text-fg-muted">Gerando o link de pagamento no gateway…</p>
         </div>
-        <p v-else-if="invoice.status.value === 'paid'" class="mt-4 font-medium text-emerald-700">Paga em {{ date(invoice.paid_at!) }}.</p>
-        <p v-else-if="invoice.status.value === 'cancelled'" class="mt-4 text-slate-500">Cancelada em {{ date(invoice.cancelled_at!) }}.</p>
+        <p v-else-if="invoice.status.value === 'paid'" class="mt-4 font-medium text-emerald-400">Paga em {{ date(invoice.paid_at!) }}.</p>
+        <p v-else-if="invoice.status.value === 'cancelled'" class="mt-4 text-fg-muted">Cancelada em {{ date(invoice.cancelled_at!) }}.</p>
       </div>
 
-      <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-        <h2 class="mb-2 font-semibold">Pagamentos</h2>
-        <p v-if="!invoice.payments?.length" class="text-sm text-slate-500">Nenhum pagamento ainda.</p>
+      <div class="card p-5">
+        <h2 class="card-title mb-2">Pagamentos</h2>
+        <p v-if="!invoice.payments?.length" class="text-sm text-fg-muted">Nenhum pagamento ainda.</p>
         <ul class="space-y-1 text-sm" data-test="payments">
           <li v-for="item in invoice.payments" :key="item.id" class="flex justify-between gap-2">
-            <span>{{ date(item.paid_at) }} · {{ item.method.label }}<span v-if="item.via_gateway" class="text-xs text-slate-400"> (gateway)</span></span>
+            <span>{{ date(item.paid_at) }} · {{ item.method.label }}<span v-if="item.via_gateway" class="text-xs text-fg-subtle"> (gateway)</span></span>
             <span class="font-medium tabular-nums">{{ money(item.amount) }}</span>
           </li>
         </ul>
-        <form v-if="canManage && invoice.status.awaits_payment" class="mt-4 space-y-2 border-t border-slate-100 pt-3" novalidate @submit.prevent="recordPayment">
-          <p class="text-xs font-medium text-slate-600">Recebeu por fora do link? Registre aqui.</p>
+        <form v-if="canManage && invoice.status.awaits_payment" class="mt-4 space-y-2 border-t border-line pt-3" novalidate @submit.prevent="recordPayment">
+          <p class="text-xs font-medium text-fg-muted">Recebeu por fora do link? Registre aqui.</p>
           <div class="grid grid-cols-2 gap-2">
             <BaseInput id="payment-amount" v-model="paymentForm.amount" label="Valor" :error="payment.fieldErrors.value.amount" />
             <BaseInput id="payment-date" v-model="paymentForm.paid_on" label="Data" type="date" :error="payment.fieldErrors.value.paid_on" />
           </div>
-          <select v-model="paymentForm.method" aria-label="Forma de pagamento" class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm">
+          <select v-model="paymentForm.method" aria-label="Forma de pagamento" class="field field-sm w-full">
             <option v-for="option in options?.payment_methods ?? []" :key="option.value" :value="option.value">{{ option.label }}</option>
           </select>
           <FormAlert v-if="Object.keys(payment.fieldErrors.value).length === 0" :message="payment.message.value" />
           <BaseButton :loading="payment.submitting.value">Registrar pagamento</BaseButton>
         </form>
-        <div v-if="invoice.reminders?.length" class="mt-4 border-t border-slate-100 pt-3" data-test="reminders">
-          <p class="mb-1 text-xs font-medium text-slate-600">Lembretes enviados ao cliente</p>
-          <ul class="space-y-0.5 text-xs text-slate-500">
+        <div v-if="invoice.reminders?.length" class="mt-4 border-t border-line pt-3" data-test="reminders">
+          <p class="mb-1 text-xs font-medium text-fg-muted">Lembretes enviados ao cliente</p>
+          <ul class="space-y-0.5 text-xs text-fg-muted">
             <li v-for="reminder in invoice.reminders" :key="reminder.stage.value">{{ date(reminder.sent_at) }} · {{ reminder.stage.label }}</li>
           </ul>
         </div>
@@ -256,18 +262,18 @@ onBeforeUnmount(() => clearTimeout(poll))
 
     <form class="space-y-6" novalidate @submit.prevent="onSave">
       <fieldset :disabled="!editable" class="space-y-6 [&_input:disabled]:border-transparent [&_input:disabled]:bg-transparent [&_input:disabled]:px-0 [&_textarea:disabled]:resize-none [&_textarea:disabled]:border-transparent [&_textarea:disabled]:bg-transparent [&_textarea:disabled]:px-0">
-        <section v-if="isDraft" class="grid gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:grid-cols-3">
+        <section v-if="isDraft" class="card grid gap-4 p-6 sm:grid-cols-3">
           <div>
-            <label for="invoice-client" class="mb-1 block text-sm font-medium text-slate-700">Cliente</label>
-            <select id="invoice-client" v-model="form.client_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <label for="invoice-client" class="field-label">Cliente</label>
+            <select id="invoice-client" v-model="form.client_id" class="field w-full">
               <option value="" disabled>Escolha o cliente</option>
               <option v-for="client in clients" :key="client.id" :value="client.id">{{ client.name }}{{ client.email ? '' : ' (sem e-mail)' }}</option>
             </select>
-            <p v-if="save.fieldErrors.value.client_id" class="mt-1 text-xs text-red-600">{{ save.fieldErrors.value.client_id }}</p>
+            <p v-if="save.fieldErrors.value.client_id" class="mt-1 text-xs text-red-400">{{ save.fieldErrors.value.client_id }}</p>
           </div>
           <div>
-            <label for="invoice-project" class="mb-1 block text-sm font-medium text-slate-700">Projeto (opcional)</label>
-            <select id="invoice-project" v-model="form.project_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <label for="invoice-project" class="field-label">Projeto (opcional)</label>
+            <select id="invoice-project" v-model="form.project_id" class="field w-full">
               <option value="">Sem projeto</option>
               <option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option>
             </select>
@@ -275,15 +281,15 @@ onBeforeUnmount(() => clearTimeout(poll))
           <BaseInput id="invoice-due" v-model="form.due_date" label="Vencimento" type="date" :error="save.fieldErrors.value.due_date" />
         </section>
 
-        <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <section class="card p-6">
           <div class="mb-3 flex items-center justify-between">
-            <h2 class="font-semibold">Itens</h2>
-            <span v-if="invoice?.time_entries_count" class="text-xs text-slate-500">{{ invoice.time_entries_count }} apontamentos de horas nesta fatura</span>
+            <h2 class="card-title">Itens</h2>
+            <span v-if="invoice?.time_entries_count" class="text-xs text-fg-muted">{{ invoice.time_entries_count }} apontamentos de horas nesta fatura</span>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full min-w-[640px] text-sm" data-test="items">
               <thead>
-                <tr class="text-left text-xs text-slate-500">
+                <tr class="text-left text-xs text-fg-muted">
                   <th class="pb-2 font-medium">Descrição</th>
                   <th class="w-24 pb-2 font-medium">Qtd.</th>
                   <th class="w-32 pb-2 font-medium">Valor unitário</th>
@@ -293,36 +299,36 @@ onBeforeUnmount(() => clearTimeout(poll))
               </thead>
               <tbody>
                 <tr v-for="(item, index) in form.items" :key="index">
-                  <td class="py-1 pr-2"><input v-model="item.description" :aria-label="`Descrição do item ${index + 1}`" class="w-full rounded-lg border border-slate-300 px-2 py-1.5" /></td>
-                  <td class="py-1 pr-2"><input v-model="item.quantity" inputmode="decimal" :aria-label="`Quantidade do item ${index + 1}`" class="w-full rounded-lg border border-slate-300 px-2 py-1.5" /></td>
-                  <td class="py-1 pr-2"><input v-model="item.unit_price" inputmode="decimal" placeholder="0,00" :aria-label="`Valor unitário do item ${index + 1}`" class="w-full rounded-lg border border-slate-300 px-2 py-1.5" /></td>
+                  <td class="py-1 pr-2"><input v-model="item.description" :aria-label="`Descrição do item ${index + 1}`" class="field field-sm w-full" /></td>
+                  <td class="py-1 pr-2"><input v-model="item.quantity" inputmode="decimal" :aria-label="`Quantidade do item ${index + 1}`" class="field field-sm w-full" /></td>
+                  <td class="py-1 pr-2"><input v-model="item.unit_price" inputmode="decimal" placeholder="0,00" :aria-label="`Valor unitário do item ${index + 1}`" class="field field-sm w-full" /></td>
                   <td class="py-1 text-right tabular-nums">{{ money(totals.lines[index] ?? '0') }}</td>
                   <td class="py-1 text-right">
-                    <button v-if="editable" type="button" class="px-1 text-slate-400 hover:text-red-600" :aria-label="`Remover item ${index + 1}`" @click="removeItem(index)">✕</button>
+                    <button v-if="editable" type="button" class="rounded-md p-1 text-fg-subtle hover:bg-red-500/10 hover:text-red-300" :aria-label="`Remover item ${index + 1}`" @click="removeItem(index)"><AppIcon name="close" :size="15" /></button>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <p v-if="Object.keys(save.fieldErrors.value).some((key) => key.startsWith('items'))" class="mt-1 text-xs text-red-600">Confira a descrição, a quantidade e o valor de cada item.</p>
-          <button v-if="editable" type="button" class="mt-2 text-sm font-medium text-brand-600 hover:underline" @click="form.items.push(blankItem())">+ Adicionar item</button>
+          <p v-if="Object.keys(save.fieldErrors.value).some((key) => key.startsWith('items'))" class="mt-1 text-xs text-red-400">Confira a descrição, a quantidade e o valor de cada item.</p>
+          <button v-if="editable" type="button" class="btn-ghost btn-sm mt-2 !text-brand-400" @click="form.items.push(blankItem())"><AppIcon name="plus" :size="15" />Adicionar item</button>
 
           <div class="mt-6 ml-auto w-full max-w-sm space-y-2 text-sm">
-            <div class="flex justify-between"><span class="text-slate-600">Subtotal</span><span class="tabular-nums">{{ money(totals.subtotal) }}</span></div>
+            <div class="flex justify-between"><span class="text-fg-muted">Subtotal</span><span class="tabular-nums">{{ money(totals.subtotal) }}</span></div>
             <div class="flex items-center justify-between gap-3">
-              <label for="invoice-discount" class="text-slate-600">Desconto (R$)</label>
-              <input id="invoice-discount" v-model="form.discount" inputmode="decimal" class="w-28 rounded-lg border border-slate-300 px-2 py-1 text-right" />
+              <label for="invoice-discount" class="text-fg-muted">Desconto (R$)</label>
+              <input id="invoice-discount" v-model="form.discount" inputmode="decimal" class="field field-sm w-28 text-right" />
             </div>
-            <p v-if="totals.discountTooHigh" class="text-right text-xs text-red-600">O desconto é maior que o subtotal.</p>
-            <div class="flex justify-between border-t border-slate-200 pt-2 text-base font-semibold">
+            <p v-if="totals.discountTooHigh" class="text-right text-xs text-red-400">O desconto é maior que o subtotal.</p>
+            <div class="flex justify-between border-t border-line pt-2 text-base font-semibold">
               <span>Total</span><span class="tabular-nums" data-test="total">{{ money(totals.total) }}</span>
             </div>
           </div>
         </section>
 
-        <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <label for="invoice-notes" class="mb-1 block font-semibold">Observações (opcional)</label>
-          <textarea id="invoice-notes" v-model="form.notes" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        <section class="card p-6">
+          <label for="invoice-notes" class="card-title mb-3 block">Observações (opcional)</label>
+          <textarea id="invoice-notes" v-model="form.notes" rows="3" class="field w-full" />
         </section>
       </fieldset>
 
@@ -333,9 +339,9 @@ onBeforeUnmount(() => clearTimeout(poll))
       </div>
 
       <div v-if="editable" class="flex flex-wrap items-center gap-3">
-        <div class="w-40"><BaseButton :loading="save.submitting.value">Salvar rascunho</BaseButton></div>
-        <button type="button" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50" :disabled="busy || save.submitting.value" data-test="send" @click="send">
-          Fechar e enviar ao cliente
+        <BaseButton inline :loading="save.submitting.value">Salvar rascunho</BaseButton>
+        <button type="button" class="btn-success" :disabled="busy || save.submitting.value" data-test="send" @click="send">
+          <AppIcon name="send" :size="15" />Fechar e enviar ao cliente
         </button>
       </div>
     </form>

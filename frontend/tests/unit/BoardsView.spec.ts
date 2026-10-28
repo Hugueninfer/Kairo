@@ -55,7 +55,7 @@ describe('BoardsView', () => {
     const create = vi.spyOn(boardsApi, 'create').mockResolvedValue({ ...board, id: 'novo' })
     const { wrapper, router } = await mountView(['boards.view', 'boards.manage', 'projects.view'])
 
-    await wrapper.get('button.bg-brand-600').trigger('click')
+    await wrapper.get('[data-test="new-board"]').trigger('click')
     await flushPromises()
     await wrapper.get('#board-title').setValue('Fluxo de pedidos')
     await wrapper.get('#board-project').setValue('p1')

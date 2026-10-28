@@ -4,6 +4,10 @@ import { useRoute, useRouter } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import StatusBadge from '@/components/ui/StatusBadge.vue'
+import { statusTone } from '@/composables/statusTone'
 import { addDays, isoDate } from '@/composables/time'
 import { formatMoney, quoteTotals } from '@/composables/money'
 import { useApiForm } from '@/composables/useApiForm'
@@ -146,31 +150,28 @@ onMounted(async () => {
 
 <template>
   <AppLayout>
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <RouterLink :to="{ name: 'quotes' }" class="text-sm text-brand-600 hover:underline">‹ Orçamentos</RouterLink>
-        <h1 class="text-2xl font-semibold">
+    <PageHeader
+      :title="quote ? `Orçamento ${quote.number}` : 'Novo orçamento'"
+      :breadcrumbs="[{ label: 'Orçamentos', to: { name: 'quotes' } }, { label: quote ? quote.number : 'Novo' }]"
+    >
+      <template #title>
+        <span class="flex flex-wrap items-center gap-3">
           {{ quote ? `Orçamento ${quote.number}` : 'Novo orçamento' }}
-          <span v-if="quote" class="ml-2 rounded bg-slate-100 px-2 py-0.5 align-middle text-xs font-normal text-slate-600" data-test="quote-status">{{ quote.status.label }}</span>
-        </h1>
-      </div>
-      <div v-if="quote" class="flex flex-wrap gap-3 text-sm">
-        <a :href="quotesApi.pdfUrl(quote.id)" class="text-brand-600 hover:underline" data-test="pdf">Baixar PDF</a>
-        <button v-if="canManage" type="button" class="text-brand-600 hover:underline" :disabled="busy" @click="duplicate">Duplicar</button>
-        <button v-if="canManage && quote.status.value !== 'accepted'" type="button" class="text-red-600 hover:underline" :disabled="busy" @click="remove">Apagar</button>
-      </div>
-    </div>
+          <StatusBadge v-if="quote" :tone="statusTone('quote', quote.status.value)" data-test="quote-status">{{ quote.status.label }}</StatusBadge>
+        </span>
+      </template>
+      <template v-if="quote" #actions>
+        <a :href="quotesApi.pdfUrl(quote.id)" class="btn-secondary" data-test="pdf"><AppIcon name="download" :size="16" />Baixar PDF</a>
+        <button v-if="canManage" type="button" class="btn-secondary" :disabled="busy" @click="duplicate"><AppIcon name="copy" :size="16" />Duplicar</button>
+        <button v-if="canManage && quote.status.value !== 'accepted'" type="button" class="btn-danger" :disabled="busy" @click="remove"><AppIcon name="trash" :size="16" />Apagar</button>
+      </template>
+    </PageHeader>
 
     <FormAlert :message="loadError" />
 
     <!-- Situação do orçamento perante o cliente -->
-    <div v-if="quote && quote.status.value !== 'draft'" class="rounded-xl px-4 py-3 text-sm ring-1" data-test="quote-banner"
-      :class="{
-        'bg-sky-50 text-sky-800 ring-sky-200': ['sent', 'viewed'].includes(quote.status.value),
-        'bg-emerald-50 text-emerald-800 ring-emerald-200': quote.status.value === 'accepted',
-        'bg-red-50 text-red-800 ring-red-200': quote.status.value === 'rejected',
-        'bg-amber-50 text-amber-800 ring-amber-200': quote.status.value === 'expired',
-      }"
+    <div v-if="quote && quote.status.value !== 'draft'" class="rounded-xl px-4 py-3 text-sm ring-1 ring-inset" data-test="quote-banner"
+      :class="{ 'bg-sky-500/10 text-sky-300 ring-sky-500/30': ['sent', 'viewed'].includes(quote.status.value), 'bg-emerald-500/10 text-emerald-300 ring-emerald-500/30': quote.status.value === 'accepted', 'bg-red-500/10 text-red-300 ring-red-500/30': quote.status.value === 'rejected', 'bg-amber-500/10 text-amber-300 ring-amber-500/30': quote.status.value === 'expired', }"
     >
       <template v-if="quote.status.value === 'sent'">Enviado em {{ date(quote.sent_at!) }}. O cliente ainda não abriu o link.</template>
       <template v-else-if="quote.status.value === 'viewed'">O cliente abriu o orçamento em {{ date(quote.viewed_at!) }} e ainda não respondeu.</template>
@@ -190,32 +191,32 @@ onMounted(async () => {
 
     <form class="space-y-6" novalidate @submit.prevent="onSave">
       <fieldset :disabled="readOnly" class="space-y-6">
-        <section class="grid gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:grid-cols-2">
+        <section class="card grid gap-4 p-6 sm:grid-cols-2">
           <div>
-            <label for="quote-client" class="mb-1 block text-sm font-medium text-slate-700">Cliente</label>
-            <select id="quote-client" v-model="form.client_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <label for="quote-client" class="field-label">Cliente</label>
+            <select id="quote-client" v-model="form.client_id" class="field w-full">
               <option value="" disabled>Escolha o cliente</option>
               <option v-for="client in clients" :key="client.id" :value="client.id">{{ client.name }}{{ client.email ? '' : ' (sem e-mail)' }}</option>
             </select>
-            <p v-if="save.fieldErrors.value.client_id" class="mt-1 text-xs text-red-600">{{ save.fieldErrors.value.client_id }}</p>
+            <p v-if="save.fieldErrors.value.client_id" class="mt-1 text-xs text-red-400">{{ save.fieldErrors.value.client_id }}</p>
           </div>
           <BaseInput id="quote-valid" v-model="form.valid_until" label="Válido até" type="date" :error="save.fieldErrors.value.valid_until" />
           <div class="sm:col-span-2">
             <BaseInput id="quote-title" v-model="form.title" label="Título" :error="save.fieldErrors.value.title" />
           </div>
           <div class="sm:col-span-2">
-            <label for="quote-intro" class="mb-1 block text-sm font-medium text-slate-700">Apresentação (opcional)</label>
-            <textarea id="quote-intro" v-model="form.introduction" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+            <label for="quote-intro" class="field-label">Apresentação (opcional)</label>
+            <textarea id="quote-intro" v-model="form.introduction" rows="3" class="field w-full" />
           </div>
         </section>
 
-        <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <h2 class="mb-3 font-semibold">Itens</h2>
-          <p v-if="save.fieldErrors.value.items" class="mb-2 text-xs text-red-600">{{ save.fieldErrors.value.items }}</p>
+        <section class="card p-6">
+          <h2 class="card-title mb-3">Itens</h2>
+          <p v-if="save.fieldErrors.value.items" class="mb-2 text-xs text-red-400">{{ save.fieldErrors.value.items }}</p>
           <div class="overflow-x-auto">
             <table class="w-full min-w-[720px] text-sm" data-test="items">
               <thead>
-                <tr class="text-left text-xs text-slate-500">
+                <tr class="text-left text-xs text-fg-muted">
                   <th class="pb-2 font-medium">Descrição</th>
                   <th class="w-32 pb-2 font-medium">Tipo</th>
                   <th class="w-24 pb-2 font-medium">Qtd.</th>
@@ -227,53 +228,53 @@ onMounted(async () => {
               <tbody>
                 <tr v-for="(item, index) in form.items" :key="index" class="align-top">
                   <td class="py-1 pr-2">
-                    <input v-model="item.description" :aria-label="`Descrição do item ${index + 1}`" class="w-full rounded-lg border px-2 py-1.5" :class="itemError(index, 'description') ? 'border-red-400' : 'border-slate-300'" />
-                    <p v-if="itemError(index, 'description')" class="text-xs text-red-600">{{ itemError(index, 'description') }}</p>
+                    <input v-model="item.description" :aria-label="`Descrição do item ${index + 1}`" class="field field-sm w-full" :class="itemError(index, 'description') ? '!border-red-500/70' : ''" />
+                    <p v-if="itemError(index, 'description')" class="text-xs text-red-400">{{ itemError(index, 'description') }}</p>
                   </td>
                   <td class="py-1 pr-2">
-                    <select v-model="item.type" :aria-label="`Tipo do item ${index + 1}`" class="w-full rounded-lg border border-slate-300 px-2 py-1.5">
+                    <select v-model="item.type" :aria-label="`Tipo do item ${index + 1}`" class="field field-sm w-full">
                       <option v-for="option in options?.quote_item_types ?? []" :key="option.value" :value="option.value">{{ option.label }}</option>
                     </select>
                   </td>
                   <td class="py-1 pr-2">
-                    <input v-model="item.quantity" inputmode="decimal" :aria-label="`Quantidade do item ${index + 1}`" class="w-full rounded-lg border px-2 py-1.5" :class="itemError(index, 'quantity') ? 'border-red-400' : 'border-slate-300'" />
-                    <span class="text-xs text-slate-400">{{ item.type === 'hourly' ? 'horas' : 'unidades' }}</span>
+                    <input v-model="item.quantity" inputmode="decimal" :aria-label="`Quantidade do item ${index + 1}`" class="field field-sm w-full" :class="itemError(index, 'quantity') ? '!border-red-500/70' : ''" />
+                    <span class="text-xs text-fg-subtle">{{ item.type === 'hourly' ? 'horas' : 'unidades' }}</span>
                   </td>
                   <td class="py-1 pr-2">
-                    <input v-model="item.unit_price" inputmode="decimal" placeholder="0,00" :aria-label="`Valor unitário do item ${index + 1}`" class="w-full rounded-lg border px-2 py-1.5" :class="itemError(index, 'unit_price') ? 'border-red-400' : 'border-slate-300'" />
+                    <input v-model="item.unit_price" inputmode="decimal" placeholder="0,00" :aria-label="`Valor unitário do item ${index + 1}`" class="field field-sm w-full" :class="itemError(index, 'unit_price') ? '!border-red-500/70' : ''" />
                   </td>
                   <td class="py-2.5 text-right tabular-nums">{{ money(totals.lines[index] ?? '0') }}</td>
                   <td class="py-1 text-right">
-                    <button v-if="!readOnly" type="button" class="px-1 text-slate-400 hover:text-red-600" :aria-label="`Remover item ${index + 1}`" @click="removeItem(index)">✕</button>
+                    <button v-if="!readOnly" type="button" class="rounded-md p-1 text-fg-subtle hover:bg-red-500/10 hover:text-red-300" :aria-label="`Remover item ${index + 1}`" @click="removeItem(index)"><AppIcon name="close" :size="15" /></button>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <button v-if="!readOnly" type="button" class="mt-2 text-sm font-medium text-brand-600 hover:underline" @click="form.items.push(blankItem())">+ Adicionar item</button>
+          <button v-if="!readOnly" type="button" class="btn-ghost btn-sm mt-2 !text-brand-400" @click="form.items.push(blankItem())"><AppIcon name="plus" :size="15" />Adicionar item</button>
 
           <div class="mt-6 ml-auto w-full max-w-sm space-y-2 text-sm" data-test="totals">
-            <div class="flex justify-between"><span class="text-slate-600">Subtotal</span><span class="tabular-nums">{{ money(totals.subtotal) }}</span></div>
+            <div class="flex justify-between"><span class="text-fg-muted">Subtotal</span><span class="tabular-nums">{{ money(totals.subtotal) }}</span></div>
             <div class="flex items-center justify-between gap-3">
-              <label for="quote-discount" class="text-slate-600">Desconto (R$)</label>
-              <input id="quote-discount" v-model="form.discount" inputmode="decimal" class="w-28 rounded-lg border border-slate-300 px-2 py-1 text-right" />
+              <label for="quote-discount" class="text-fg-muted">Desconto (R$)</label>
+              <input id="quote-discount" v-model="form.discount" inputmode="decimal" class="field field-sm w-28 text-right" />
             </div>
-            <p v-if="totals.discountTooHigh" class="text-right text-xs text-red-600">O desconto é maior que o subtotal.</p>
+            <p v-if="totals.discountTooHigh" class="text-right text-xs text-red-400">O desconto é maior que o subtotal.</p>
             <div class="flex items-center justify-between gap-3">
-              <label for="quote-tax" class="text-slate-600">Impostos (%)</label>
-              <input id="quote-tax" v-model="form.tax_rate" inputmode="decimal" class="w-28 rounded-lg border border-slate-300 px-2 py-1 text-right" />
+              <label for="quote-tax" class="text-fg-muted">Impostos (%)</label>
+              <input id="quote-tax" v-model="form.tax_rate" inputmode="decimal" class="field field-sm w-28 text-right" />
             </div>
-            <div class="flex justify-between text-slate-600"><span>Valor dos impostos</span><span class="tabular-nums">{{ money(totals.tax) }}</span></div>
-            <div class="flex justify-between border-t border-slate-200 pt-2 text-base font-semibold">
+            <div class="flex justify-between text-fg-muted"><span>Valor dos impostos</span><span class="tabular-nums">{{ money(totals.tax) }}</span></div>
+            <div class="flex justify-between border-t border-line pt-2 text-base font-semibold">
               <span>Total</span><span class="tabular-nums" data-test="total">{{ money(totals.total) }}</span>
             </div>
           </div>
         </section>
 
-        <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <label for="quote-terms" class="mb-1 block font-semibold">Condições (opcional)</label>
-          <p class="mb-2 text-xs text-slate-500">Forma de pagamento, prazos, o que não está incluso. Vão para o PDF e para o contrato.</p>
-          <textarea id="quote-terms" v-model="form.terms" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        <section class="card p-6">
+          <label for="quote-terms" class="card-title mb-1 block">Condições (opcional)</label>
+          <p class="mb-2 text-xs text-fg-muted">Forma de pagamento, prazos, o que não está incluso. Vão para o PDF e para o contrato.</p>
+          <textarea id="quote-terms" v-model="form.terms" rows="4" class="field w-full" />
         </section>
       </fieldset>
 
@@ -284,17 +285,15 @@ onMounted(async () => {
       </div>
 
       <div v-if="!readOnly" class="flex flex-wrap items-center gap-3">
-        <div class="w-40">
-          <BaseButton :loading="save.submitting.value">Salvar rascunho</BaseButton>
-        </div>
+        <BaseButton inline :loading="save.submitting.value">Salvar rascunho</BaseButton>
         <button
           type="button"
-          class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+          class="btn-success"
           :disabled="busy || save.submitting.value"
           data-test="send"
           @click="sendToClient"
         >
-          {{ quote && ['sent', 'viewed'].includes(quote.status.value) ? 'Salvar e reenviar ao cliente' : 'Salvar e enviar ao cliente' }}
+          <AppIcon name="send" :size="15" />{{ quote && ['sent', 'viewed'].includes(quote.status.value) ? 'Salvar e reenviar ao cliente' : 'Salvar e enviar ao cliente' }}
         </button>
       </div>
     </form>

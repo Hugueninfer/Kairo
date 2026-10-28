@@ -3,6 +3,10 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import UserAvatar from '@/components/ui/UserAvatar.vue'
+import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { useApiForm } from '@/composables/useApiForm'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { companiesApi } from '@/services/companies'
@@ -108,10 +112,10 @@ onMounted(loadLists)
 
 <template>
   <AppLayout>
-    <h1 class="text-2xl font-semibold">{{ company.current?.name }}</h1>
+    <PageHeader :title="company.current?.name ?? 'Empresa'" subtitle="Dados da empresa, membros da equipe e convites." :breadcrumbs="[{ label: 'Empresa' }, { label: 'Configurações' }]" />
 
-    <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-      <h2 class="mb-4 font-semibold">Dados da empresa</h2>
+    <section class="card p-6">
+      <h2 class="card-title mb-4">Dados da empresa</h2>
       <form class="grid gap-4 sm:grid-cols-2" novalidate @submit.prevent="saveDetails">
         <div class="sm:col-span-2 space-y-2">
           <FormAlert v-if="Object.keys(details.fieldErrors.value).length === 0" :message="details.message.value" />
@@ -120,8 +124,8 @@ onMounted(loadLists)
         <BaseInput id="company-name" v-model="form.name" label="Nome" :error="details.fieldErrors.value.name" />
         <BaseInput id="company-document" v-model="form.document" label="CPF ou CNPJ" :error="details.fieldErrors.value.document" />
         <div>
-          <label for="company-currency" class="mb-1 block text-sm font-medium text-slate-700">Moeda</label>
-          <select id="company-currency" v-model="form.currency" :disabled="!canEdit" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <label for="company-currency" class="field-label">Moeda</label>
+          <select id="company-currency" v-model="form.currency" :disabled="!canEdit" class="field w-full">
             <option value="BRL">Real (R$)</option>
             <option value="USD">Dólar (US$)</option>
             <option value="EUR">Euro (€)</option>
@@ -134,55 +138,58 @@ onMounted(loadLists)
           type="number"
           :error="details.fieldErrors.value.default_hourly_rate"
         />
-        <div v-if="canEdit" class="sm:col-span-2 sm:w-48">
-          <BaseButton :loading="details.submitting.value">Salvar</BaseButton>
+        <div v-if="canEdit" class="flex sm:col-span-2">
+          <BaseButton :loading="details.submitting.value" inline>Salvar alterações</BaseButton>
         </div>
       </form>
     </section>
 
-    <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+    <section class="card p-6">
       <div class="mb-4 flex items-center justify-between">
-        <h2 class="font-semibold">Membros</h2>
-        <RouterLink v-if="canManageRoles" to="/empresa/papeis" class="text-sm text-brand-600 hover:underline">Papéis e permissões</RouterLink>
+        <h2 class="card-title">Membros</h2>
+        <RouterLink v-if="canManageRoles" to="/empresa/papeis" class="link inline-flex items-center gap-1.5 text-sm"><AppIcon name="shield" :size="15" />Papéis e permissões</RouterLink>
       </div>
       <FormAlert :message="listError" />
-      <ul class="divide-y divide-slate-100" data-test="members">
+      <ul class="divide-y divide-line" data-test="members">
         <li v-for="member in members" :key="member.id" class="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
-          <div>
-            <p class="font-medium">{{ member.name }}</p>
-            <p class="text-slate-500">{{ member.email }}</p>
+          <div class="flex min-w-0 items-center gap-3">
+            <UserAvatar :name="member.name" :size="36" />
+            <div class="min-w-0">
+              <p class="truncate font-medium text-fg">{{ member.name }}</p>
+              <p class="truncate text-fg-muted">{{ member.email }}</p>
+            </div>
           </div>
           <div class="flex items-center gap-4">
             <select
               v-if="canManageRoles && !member.is_owner"
               :value="member.role?.id"
               :aria-label="`Papel de ${member.name}`"
-              class="rounded-lg border border-slate-300 px-2 py-1 text-sm"
+              class="field field-sm w-40"
               data-test="member-role"
               @change="changeRole(member, $event)"
             >
               <option v-for="role in assignableRoles" :key="role.id" :value="role.id">{{ role.name }}</option>
             </select>
-            <span v-else class="rounded bg-brand-50 px-1.5 py-0.5 text-xs text-brand-700">{{ member.role?.name ?? 'Sem papel' }}</span>
-            <button v-if="canRemove && !member.is_owner" type="button" class="text-red-600 hover:underline" @click="removeMember(member)">Remover</button>
+            <StatusBadge v-else tone="blue">{{ member.role?.name ?? 'Sem papel' }}</StatusBadge>
+            <button v-if="canRemove && !member.is_owner" type="button" class="btn-ghost btn-sm !text-red-400" @click="removeMember(member)">Remover</button>
           </div>
         </li>
       </ul>
     </section>
 
-    <section v-if="canInvite" class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-      <h2 class="mb-4 font-semibold">Convidar pessoas</h2>
+    <section v-if="canInvite" class="card p-6">
+      <h2 class="card-title mb-4">Convidar pessoas</h2>
       <form class="flex flex-col gap-3 sm:flex-row sm:items-start" novalidate @submit.prevent="sendInvite">
         <div class="flex-1">
           <BaseInput id="invite-email" v-model="inviteEmail" label="E-mail" type="email" :error="invite.fieldErrors.value.email" />
         </div>
         <div class="sm:w-44">
-          <label for="invite-role" class="mb-1 block text-sm font-medium text-slate-700">Papel</label>
-          <select id="invite-role" v-model="inviteRoleId" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <label for="invite-role" class="field-label">Papel</label>
+          <select id="invite-role" v-model="inviteRoleId" class="field w-full">
             <option v-for="role in assignableRoles" :key="role.id" :value="role.id">{{ role.name }}</option>
           </select>
         </div>
-        <div class="sm:mt-6 sm:w-40">
+        <div class="sm:mt-[26px] sm:w-40">
           <BaseButton :loading="invite.submitting.value">Convidar</BaseButton>
         </div>
       </form>
@@ -190,16 +197,16 @@ onMounted(loadLists)
         <FormAlert v-if="Object.keys(invite.fieldErrors.value).length === 0" :message="invite.message.value" />
       </div>
 
-      <ul v-if="invitations.length" class="mt-4 divide-y divide-slate-100" data-test="invitations">
+      <ul v-if="invitations.length" class="mt-4 divide-y divide-line" data-test="invitations">
         <li v-for="invitation in invitations" :key="invitation.id" class="flex items-center justify-between py-3 text-sm">
           <div>
             <p class="font-medium">{{ invitation.email }}</p>
-            <p class="text-slate-500">
+            <p class="text-fg-muted">
               {{ invitation.role?.name ?? 'Membro' }} · {{ invitation.status.label }} · vence em
               {{ new Date(invitation.expires_at).toLocaleDateString('pt-BR') }}
             </p>
           </div>
-          <button type="button" class="text-red-600 hover:underline" @click="revoke(invitation)">Cancelar</button>
+          <button type="button" class="btn-ghost btn-sm !text-red-400" @click="revoke(invitation)">Cancelar</button>
         </li>
       </ul>
     </section>

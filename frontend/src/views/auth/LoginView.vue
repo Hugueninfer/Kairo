@@ -50,9 +50,9 @@ function restart() {
     <form v-if="askCode" class="space-y-4" novalidate @submit.prevent="onSubmit">
       <FormAlert :message="message" />
       <BaseInput id="code" v-model="code" label="Código" autocomplete="one-time-code" :error="fieldErrors.code" />
-      <p class="text-xs text-slate-500">Sem acesso ao aplicativo? Use um dos códigos de recuperação que você guardou.</p>
+      <p class="text-xs text-fg-muted">Sem acesso ao aplicativo? Use um dos códigos de recuperação que você guardou.</p>
       <BaseButton :loading="submitting">Confirmar</BaseButton>
-      <button type="button" class="w-full text-sm text-brand-600 hover:underline" @click="restart">Voltar</button>
+      <button type="button" class="link w-full text-sm" @click="restart">Voltar</button>
     </form>
 
     <form v-else class="space-y-4" novalidate @submit.prevent="onSubmit">
@@ -68,18 +68,18 @@ function restart() {
         :error="fieldErrors.password"
       />
       <div class="flex items-center justify-between text-sm">
-        <label class="flex items-center gap-2 text-slate-600">
-          <input v-model="form.remember" type="checkbox" class="rounded border-slate-300" />
+        <label class="flex items-center gap-2 text-fg-muted">
+          <input v-model="form.remember" type="checkbox" class="h-4 w-4 rounded" />
           Lembrar de mim
         </label>
-        <RouterLink to="/esqueci-a-senha" class="font-medium text-brand-600 hover:underline">Esqueci a senha</RouterLink>
+        <RouterLink to="/esqueci-a-senha" class="link">Esqueci a senha</RouterLink>
       </div>
       <BaseButton :loading="submitting">Entrar</BaseButton>
     </form>
 
     <template v-if="!askCode" #footer>
       Ainda não tem conta?
-      <RouterLink :to="{ name: 'register', query: route.query }" class="font-medium text-brand-600 hover:underline">Criar conta</RouterLink>
+      <RouterLink :to="{ name: 'register', query: route.query }" class="link">Criar conta</RouterLink>
     </template>
   </AuthLayout>
 </template>

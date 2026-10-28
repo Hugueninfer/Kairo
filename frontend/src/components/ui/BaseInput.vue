@@ -5,6 +5,7 @@ defineProps<{
   type?: string
   autocomplete?: string
   error?: string
+  placeholder?: string
 }>()
 
 // Sempre texto, inclusive em type="number" (o v-model nativo converteria para número).
@@ -13,18 +14,19 @@ const model = defineModel<string>({ required: true })
 
 <template>
   <div>
-    <label :for="id" class="mb-1 block text-sm font-medium text-slate-700">{{ label }}</label>
+    <label :for="id" class="field-label">{{ label }}</label>
     <input
       :id="id"
       :value="model"
       :type="type ?? 'text'"
       :autocomplete="autocomplete"
+      :placeholder="placeholder"
       :aria-invalid="error ? 'true' : undefined"
       :aria-describedby="error ? `${id}-error` : undefined"
-      class="w-full rounded-lg border px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-brand-500"
-      :class="error ? 'border-red-400' : 'border-slate-300'"
+      class="field w-full"
+      :class="error ? '!border-red-500/70 focus:!ring-red-500/25' : ''"
       @input="model = ($event.target as HTMLInputElement).value"
     />
-    <p v-if="error" :id="`${id}-error`" class="mt-1 text-xs text-red-600" data-test="field-error">{{ error }}</p>
+    <p v-if="error" :id="`${id}-error`" class="mt-1.5 text-xs text-red-400" data-test="field-error">{{ error }}</p>
   </div>
 </template>

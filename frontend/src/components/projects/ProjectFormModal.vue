@@ -62,16 +62,16 @@ onMounted(async () => {
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div>
-          <label for="project-client" class="mb-1 block text-sm font-medium text-slate-700">Cliente</label>
-          <select id="project-client" v-model="form.client_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <label for="project-client" class="field-label">Cliente</label>
+          <select id="project-client" v-model="form.client_id" class="field w-full">
             <option value="">Sem cliente</option>
             <option v-for="client in clients" :key="client.id" :value="client.id">{{ client.name }}</option>
           </select>
-          <p v-if="save.fieldErrors.value.client_id" class="mt-1 text-xs text-red-600">{{ save.fieldErrors.value.client_id }}</p>
+          <p v-if="save.fieldErrors.value.client_id" class="mt-1 text-xs text-red-400">{{ save.fieldErrors.value.client_id }}</p>
         </div>
         <div>
-          <label for="project-status" class="mb-1 block text-sm font-medium text-slate-700">Situação</label>
-          <select id="project-status" v-model="form.status" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <label for="project-status" class="field-label">Situação</label>
+          <select id="project-status" v-model="form.status" class="field w-full">
             <option v-for="option in options?.project_statuses ?? []" :key="option.value" :value="option.value">{{ option.label }}</option>
           </select>
         </div>
@@ -79,8 +79,8 @@ onMounted(async () => {
 
       <div class="grid gap-4 sm:grid-cols-3">
         <div>
-          <label for="project-billing" class="mb-1 block text-sm font-medium text-slate-700">Cobrança</label>
-          <select id="project-billing" v-model="form.billing_type" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <label for="project-billing" class="field-label">Cobrança</label>
+          <select id="project-billing" v-model="form.billing_type" class="field w-full">
             <option v-for="option in options?.billing_types ?? []" :key="option.value" :value="option.value">{{ option.label }}</option>
           </select>
         </div>
@@ -108,8 +108,8 @@ onMounted(async () => {
       </div>
 
       <div>
-        <label for="project-description" class="mb-1 block text-sm font-medium text-slate-700">Descrição</label>
-        <textarea id="project-description" v-model="form.description" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        <label for="project-description" class="field-label">Descrição</label>
+        <textarea id="project-description" v-model="form.description" rows="3" class="field w-full" />
       </div>
 
       <BaseButton :loading="save.submitting.value">Salvar</BaseButton>

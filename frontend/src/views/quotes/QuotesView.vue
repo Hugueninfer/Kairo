@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import StatusBadge from '@/components/ui/StatusBadge.vue'
+import UiPagination from '@/components/ui/UiPagination.vue'
 import QuotesTabs from '@/components/quotes/QuotesTabs.vue'
 import { formatMoney } from '@/composables/money'
+import { statusTone } from '@/composables/statusTone'
 import { useOptions } from '@/composables/useOptions'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { toApiError } from '@/services/http'
@@ -17,20 +23,12 @@ const { options, load: loadOptions } = useOptions()
 const page = ref<Paginated<Quote> | null>(null)
 const status = ref('')
 const search = ref('')
+const currentPage = ref(1)
 const loadError = ref<string | null>(null)
-
-const badge: Record<string, string> = {
-  draft: 'bg-slate-100 text-slate-600',
-  sent: 'bg-sky-50 text-sky-700',
-  viewed: 'bg-indigo-50 text-indigo-700',
-  accepted: 'bg-emerald-50 text-emerald-700',
-  rejected: 'bg-red-50 text-red-700',
-  expired: 'bg-amber-50 text-amber-700',
-}
 
 async function load() {
   try {
-    page.value = await quotesApi.list({ status: status.value || undefined, search: search.value || undefined })
+    page.value = await quotesApi.list({ status: status.value || undefined, search: search.value || undefined, page: currentPage.value })
   } catch (error) {
     loadError.value = toApiError(error).message
   }
@@ -39,53 +37,67 @@ async function load() {
 let timer: ReturnType<typeof setTimeout> | undefined
 watch(search, () => {
   clearTimeout(timer)
-  timer = setTimeout(load, 300)
+  timer = setTimeout(() => goTo(1), 300)
 })
-watch(status, load)
+watch(status, () => goTo(1))
+
+function goTo(pageNumber: number) {
+  currentPage.value = pageNumber
+  load()
+}
 onMounted(() => Promise.all([load(), loadOptions()]))
 </script>
 
 <template>
   <AppLayout>
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-2xl font-semibold">Orçamentos</h1>
-      <RouterLink
-        v-if="canManage"
-        :to="{ name: 'quote-new' }"
-        class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
-      >
-        Novo orçamento
-      </RouterLink>
-    </div>
-
-    <QuotesTabs />
-
-    <div class="flex flex-wrap items-center gap-3 text-sm">
-      <input v-model="search" type="search" placeholder="Buscar por título ou número" aria-label="Buscar" class="w-64 rounded-lg border border-slate-300 px-3 py-1.5" />
-      <select v-model="status" aria-label="Situação" class="rounded-lg border border-slate-300 px-2 py-1.5">
-        <option value="">Todas as situações</option>
-        <option v-for="option in options?.quote_statuses ?? []" :key="option.value" :value="option.value">{{ option.label }}</option>
-      </select>
-    </div>
+    <PageHeader title="Orçamentos" subtitle="Propostas enviadas aos clientes e os contratos que nasceram delas." :breadcrumbs="[{ label: 'Comercial' }, { label: 'Orçamentos' }]">
+      <template #actions>
+        <RouterLink v-if="canManage" :to="{ name: 'quote-new' }" class="btn-primary"><AppIcon name="plus" :size="16" />Novo orçamento</RouterLink>
+      </template>
+      <template #tabs><QuotesTabs /></template>
+    </PageHeader>
 
     <FormAlert :message="loadError" />
 
-    <section class="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-      <p v-if="page && page.data.length === 0" class="p-6 text-sm text-slate-500">Nenhum orçamento por aqui.</p>
-      <ul class="divide-y divide-slate-100" data-test="quotes">
-        <li v-for="quote in page?.data ?? []" :key="quote.id">
-          <RouterLink :to="{ name: 'quote-edit', params: { id: quote.id } }" class="flex flex-wrap items-center gap-3 px-5 py-3 hover:bg-slate-50">
-            <span class="w-28 font-mono text-xs text-slate-500">{{ quote.number }}</span>
-            <div class="min-w-48 flex-1">
-              <p class="font-medium">{{ quote.title }}</p>
-              <p class="text-xs text-slate-500">{{ quote.client?.name }}</p>
-            </div>
-            <span class="text-xs text-slate-500">válido até {{ new Date(`${quote.valid_until}T12:00:00`).toLocaleDateString('pt-BR') }}</span>
-            <span class="w-28 text-right font-semibold tabular-nums">{{ formatMoney(quote.total, company.current?.currency) }}</span>
-            <span class="w-24 rounded px-2 py-0.5 text-center text-xs" :class="badge[quote.status.value]">{{ quote.status.label }}</span>
-          </RouterLink>
-        </li>
-      </ul>
+    <section class="card overflow-hidden">
+      <div class="card-header">
+        <div class="relative w-full sm:w-72">
+          <AppIcon name="search" :size="16" class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-subtle" />
+          <input v-model="search" type="search" placeholder="Buscar por título ou número" aria-label="Buscar" class="field field-sm w-full pl-9" />
+        </div>
+        <select v-model="status" aria-label="Situação" class="field field-sm w-full sm:w-52">
+          <option value="">Todas as situações</option>
+          <option v-for="option in options?.quote_statuses ?? []" :key="option.value" :value="option.value">{{ option.label }}</option>
+        </select>
+      </div>
+
+      <EmptyState v-if="page && page.data.length === 0" icon="file" title="Nenhum orçamento por aqui." />
+      <div v-else class="overflow-x-auto">
+        <table class="table-clean">
+          <thead>
+            <tr>
+              <th>Orçamento</th>
+              <th class="hidden md:table-cell">Cliente</th>
+              <th class="hidden sm:table-cell">Validade</th>
+              <th class="text-right">Valor</th>
+              <th>Situação</th>
+            </tr>
+          </thead>
+          <tbody data-test="quotes">
+            <tr v-for="quote in page?.data ?? []" :key="quote.id" class="cursor-pointer" @click="$router.push({ name: 'quote-edit', params: { id: quote.id } })">
+              <td class="sm:min-w-56">
+                <RouterLink :to="{ name: 'quote-edit', params: { id: quote.id } }" class="font-medium text-fg hover:text-brand-300" @click.stop>{{ quote.title }}</RouterLink>
+                <p class="font-mono text-xs text-fg-muted">{{ quote.number }}<span class="md:hidden"> · {{ quote.client?.name }}</span></p>
+              </td>
+              <td class="hidden text-fg-soft md:table-cell">{{ quote.client?.name }}</td>
+              <td class="hidden text-fg-muted sm:table-cell">{{ new Date(`${quote.valid_until}T12:00:00`).toLocaleDateString('pt-BR') }}</td>
+              <td class="text-right font-semibold whitespace-nowrap tabular-nums">{{ formatMoney(quote.total, company.current?.currency) }}</td>
+              <td><StatusBadge :tone="statusTone('quote', quote.status.value)">{{ quote.status.label }}</StatusBadge></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <UiPagination v-if="page && page.meta.last_page > 1" :current="page.meta.current_page" :last="page.meta.last_page" @go="goTo" />
     </section>
   </AppLayout>
 </template>

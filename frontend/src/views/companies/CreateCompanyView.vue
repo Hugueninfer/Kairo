@@ -46,7 +46,7 @@ async function onSubmit() {
     </form>
 
     <template v-if="company.companies.length > 0" #footer>
-      <RouterLink to="/" class="font-medium text-brand-600 hover:underline">Voltar</RouterLink>
+      <RouterLink to="/" class="link">Voltar</RouterLink>
     </template>
   </AuthLayout>
 </template>

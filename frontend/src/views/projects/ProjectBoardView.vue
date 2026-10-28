@@ -4,6 +4,11 @@ import { useRouter } from 'vue-router'
 import ProjectFormModal from '@/components/projects/ProjectFormModal.vue'
 import TaskModal from '@/components/projects/TaskModal.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import StatusBadge, { type BadgeTone } from '@/components/ui/StatusBadge.vue'
+import UserAvatar from '@/components/ui/UserAvatar.vue'
+import { statusTone } from '@/composables/statusTone'
 import { columnOf, moveTask } from '@/composables/board'
 import { useOptions } from '@/composables/useOptions'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -32,12 +37,8 @@ const columns = computed(() =>
 const modal = ref<{ task: Task | null; status?: TaskStatus } | null>(null)
 const editingProject = ref(false)
 
-const priorityClass: Record<string, string> = {
-  low: 'bg-slate-100 text-slate-600',
-  medium: 'bg-sky-50 text-sky-700',
-  high: 'bg-amber-50 text-amber-700',
-  urgent: 'bg-red-50 text-red-700',
-}
+const priorityTone: Record<string, BadgeTone> = { low: 'neutral', medium: 'blue', high: 'amber', urgent: 'red' }
+const columnDot: Record<string, string> = { todo: 'bg-zinc-400', in_progress: 'bg-brand-500', review: 'bg-violet-500', done: 'bg-emerald-500' }
 
 async function load() {
   try {
@@ -119,33 +120,35 @@ onMounted(load)
 
 <template>
   <AppLayout wide>
-    <div v-if="project" class="flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <RouterLink :to="{ name: 'projects' }" class="text-sm text-slate-500 hover:text-brand-600">← Projetos</RouterLink>
-        <h1 class="text-2xl font-semibold">{{ project.name }}</h1>
-        <p class="text-sm text-slate-500">
-          {{ project.client?.name ?? 'Sem cliente' }} · {{ project.status.label }} · {{ project.billing_type.label }}
-        </p>
-      </div>
-      <div v-if="canManageProject" class="flex gap-4 text-sm">
-        <button type="button" class="text-brand-600 hover:underline" @click="editingProject = true">Editar projeto</button>
-        <button type="button" class="text-red-600 hover:underline" @click="removeProject">Apagar</button>
-      </div>
-    </div>
+    <PageHeader v-if="project" :title="project.name" :breadcrumbs="[{ label: 'Projetos', to: { name: 'projects' } }, { label: project.name }]">
+      <template #subtitle>
+        <span class="flex flex-wrap items-center gap-2">
+          {{ project.client?.name ?? 'Sem cliente' }}
+          <StatusBadge :tone="statusTone('project', project.status.value)">{{ project.status.label }}</StatusBadge>
+          <StatusBadge tone="neutral" :dot="false">{{ project.billing_type.label }}</StatusBadge>
+        </span>
+      </template>
+      <template v-if="canManageProject" #actions>
+        <button type="button" class="btn-secondary" @click="editingProject = true"><AppIcon name="edit" :size="16" />Editar projeto</button>
+        <button type="button" class="btn-danger" @click="removeProject"><AppIcon name="trash" :size="16" />Apagar</button>
+      </template>
+    </PageHeader>
 
     <FormAlert :message="error" />
 
-    <div class="grid gap-4 md:grid-cols-4" data-test="board">
+    <div class="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 lg:grid lg:grid-cols-4 lg:overflow-visible" data-test="board">
       <section
         v-for="column in columns"
         :key="column.value"
-        class="flex min-h-48 flex-col rounded-2xl bg-slate-100 p-3"
+        class="flex min-h-64 w-[82vw] max-w-80 shrink-0 snap-start flex-col rounded-xl border border-line bg-surface p-3 sm:w-72 lg:w-auto lg:max-w-none"
         :class="dropTarget === column.value ? 'ring-2 ring-brand-500' : ''"
         :data-test="`column-${column.value}`"
       >
-        <header class="mb-2 flex items-center justify-between px-1">
-          <h2 class="text-sm font-semibold text-slate-700">{{ column.label }}</h2>
-          <span class="text-xs text-slate-500">{{ column.tasks.length }}</span>
+        <header class="mb-3 flex items-center justify-between px-1">
+          <h2 class="flex items-center gap-2 text-sm font-semibold text-fg">
+            <span class="h-2 w-2 rounded-full" :class="columnDot[column.value] ?? 'bg-zinc-500'" aria-hidden="true" />{{ column.label }}
+          </h2>
+          <span class="rounded-md bg-elevated px-1.5 text-xs text-fg-soft">{{ column.tasks.length }}</span>
         </header>
 
         <ul
@@ -159,17 +162,17 @@ onMounted(load)
             :key="task.id"
             :data-card="task.id"
             :draggable="canManageTasks"
-            class="cursor-pointer rounded-xl bg-white p-3 text-sm shadow-sm ring-1 ring-slate-200 hover:ring-brand-500"
+            class="cursor-pointer rounded-lg border border-line bg-surface-2 p-3 text-sm transition-colors hover:border-brand-500/60"
             :class="dragging === task.id ? 'opacity-50' : ''"
             @dragstart="onDragStart(task, $event)"
             @dragend="dragging = null"
             @click="modal = { task }"
           >
-            <p class="font-medium" :class="task.status.value === 'done' ? 'text-slate-400 line-through' : ''">{{ task.title }}</p>
+            <p class="font-medium" :class="task.status.value === 'done' ? 'text-fg-subtle line-through' : ''">{{ task.title }}</p>
             <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
-              <span class="rounded px-1.5 py-0.5" :class="priorityClass[task.priority.value]">{{ task.priority.label }}</span>
-              <span v-if="task.due_on" class="text-slate-500">{{ new Date(`${task.due_on}T12:00:00`).toLocaleDateString('pt-BR') }}</span>
-              <span v-if="task.assignee" class="ml-auto text-slate-600">{{ task.assignee.name }}</span>
+              <StatusBadge :tone="priorityTone[task.priority.value] ?? 'neutral'">{{ task.priority.label }}</StatusBadge>
+              <span v-if="task.due_on" class="inline-flex items-center gap-1 text-fg-muted"><AppIcon name="calendar" :size="12" />{{ new Date(`${task.due_on}T12:00:00`).toLocaleDateString('pt-BR') }}</span>
+              <span v-if="task.assignee" class="ml-auto" :title="task.assignee.name"><UserAvatar :name="task.assignee.name" :size="22" /></span>
             </div>
           </li>
         </ul>
@@ -177,10 +180,10 @@ onMounted(load)
         <button
           v-if="canManageTasks && project && ['active', 'paused'].includes(project.status.value)"
           type="button"
-          class="mt-2 rounded-lg px-2 py-1 text-left text-sm text-slate-500 hover:bg-white hover:text-brand-600"
+          class="mt-2 flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm text-fg-muted hover:bg-surface-2 hover:text-fg"
           @click="modal = { task: null, status: column.value }"
         >
-          + Adicionar tarefa
+          <AppIcon name="plus" :size="15" />Adicionar tarefa
         </button>
       </section>
     </div>

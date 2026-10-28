@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AppIcon from './AppIcon.vue'
+
 defineProps<{
   message: string | null
   variant?: 'error' | 'success'
@@ -9,10 +11,11 @@ defineProps<{
   <p
     v-if="message"
     role="alert"
-    class="rounded-lg px-3 py-2 text-sm"
-    :class="variant === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'"
+    class="flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm"
+    :class="variant === 'success' ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300' : 'border-red-500/25 bg-red-500/10 text-red-300'"
     data-test="form-alert"
   >
-    {{ message }}
+    <AppIcon :name="variant === 'success' ? 'checkCircle' : 'alert'" :size="16" class="mt-0.5" />
+    <span>{{ message }}</span>
   </p>
 </template>

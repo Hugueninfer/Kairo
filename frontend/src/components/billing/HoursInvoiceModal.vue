@@ -36,17 +36,17 @@ onMounted(async () => {
 <template>
   <BaseModal title="Faturar horas aprovadas" @close="emit('close')">
     <form class="space-y-4" novalidate @submit.prevent="submit">
-      <p class="text-sm text-slate-600">
+      <p class="text-sm text-fg-muted">
         Junta as horas aprovadas e cobráveis do projeto no período, um item por tarefa. Horas já faturadas ficam de fora.
       </p>
       <FormAlert v-if="Object.keys(save.fieldErrors.value).length === 0" :message="save.message.value" />
       <div>
-        <label for="hours-project" class="mb-1 block text-sm font-medium text-slate-700">Projeto</label>
-        <select id="hours-project" v-model="form.project_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        <label for="hours-project" class="field-label">Projeto</label>
+        <select id="hours-project" v-model="form.project_id" class="field w-full">
           <option value="" disabled>Escolha o projeto (precisa ter cliente)</option>
           <option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }} · {{ project.client?.name }}</option>
         </select>
-        <p v-if="save.fieldErrors.value.project_id" class="mt-1 text-xs text-red-600">{{ save.fieldErrors.value.project_id }}</p>
+        <p v-if="save.fieldErrors.value.project_id" class="mt-1 text-xs text-red-400">{{ save.fieldErrors.value.project_id }}</p>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <BaseInput id="hours-from" v-model="form.from" label="De" type="date" :error="save.fieldErrors.value.from" />

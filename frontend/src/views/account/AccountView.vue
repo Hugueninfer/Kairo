@@ -4,6 +4,9 @@ import { reactive, ref } from 'vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import StatusBadge from '@/components/ui/StatusBadge.vue'
+import UserAvatar from '@/components/ui/UserAvatar.vue'
 import { useApiForm } from '@/composables/useApiForm'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { authApi, type TwoFactorSetup } from '@/services/auth'
@@ -72,13 +75,15 @@ async function disableTwoFactor() {
 
 <template>
   <AppLayout>
-    <div>
-      <h1 class="text-2xl font-semibold">Minha conta</h1>
-      <p class="text-sm text-slate-600">{{ auth.user?.name }} · {{ auth.user?.email }}</p>
-    </div>
+    <PageHeader title="Minha conta" :breadcrumbs="[{ label: 'Conta' }, { label: 'Segurança' }]">
+      <template #subtitle>
+        <span class="inline-flex items-center gap-2"><UserAvatar :name="auth.user?.name" :size="22" />{{ auth.user?.name }} · {{ auth.user?.email }}</span>
+      </template>
+    </PageHeader>
 
-    <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-      <h2 class="font-semibold">Trocar senha</h2>
+    <div class="grid items-start gap-4 xl:grid-cols-2">
+    <section class="card p-6">
+      <h2 class="card-title">Trocar senha</h2>
       <form class="mt-4 grid max-w-md gap-4" novalidate data-test="password-form" @submit.prevent="changePassword">
         <FormAlert :message="passwordForm.message.value" />
         <FormAlert :message="passwordSaved" variant="success" />
@@ -105,21 +110,18 @@ async function disableTwoFactor() {
           type="password"
           autocomplete="new-password"
         />
-        <div class="w-40"><BaseButton :loading="passwordForm.submitting.value">Salvar senha</BaseButton></div>
+        <BaseButton inline :loading="passwordForm.submitting.value">Salvar senha</BaseButton>
       </form>
     </section>
 
-    <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200" data-test="two-factor">
+    <section class="card p-6" data-test="two-factor">
       <div class="flex flex-wrap items-center gap-2">
-        <h2 class="font-semibold">Login em duas etapas</h2>
-        <span
-          class="rounded px-2 py-0.5 text-xs font-medium"
-          :class="auth.user?.two_factor_enabled ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'"
-          data-test="two-factor-status"
-          >{{ auth.user?.two_factor_enabled ? 'Ligado' : 'Desligado' }}</span
-        >
+        <h2 class="card-title">Login em duas etapas</h2>
+        <StatusBadge :tone="auth.user?.two_factor_enabled ? 'green' : 'neutral'" data-test="two-factor-status">{{
+          auth.user?.two_factor_enabled ? 'Ligado' : 'Desligado'
+        }}</StatusBadge>
       </div>
-      <p class="mt-1 max-w-2xl text-sm text-slate-600">
+      <p class="mt-1 max-w-2xl text-sm text-fg-muted">
         Além da senha, o Kairo pede um código do aplicativo autenticador do seu celular (Google Authenticator, Authy, 1Password...). Recomendado para quem é
         dono ou administrador de uma empresa.
       </p>
@@ -127,7 +129,7 @@ async function disableTwoFactor() {
       <div class="mt-4 max-w-md space-y-4">
         <FormAlert :message="twoFactor.message.value" />
 
-        <div v-if="recoveryCodes" class="rounded-lg bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-200" data-test="recovery-codes">
+        <div v-if="recoveryCodes" class="rounded-lg bg-amber-500/10 p-4 text-sm text-amber-200 ring-1 ring-amber-500/30" data-test="recovery-codes">
           <p class="font-semibold">Guarde estes códigos de recuperação</p>
           <p class="mt-1">Cada um entra uma vez se você perder o celular. Eles não aparecem de novo.</p>
           <ul class="mt-3 grid grid-cols-2 gap-1 font-mono">
@@ -136,14 +138,14 @@ async function disableTwoFactor() {
         </div>
 
         <form v-if="setup" class="space-y-3" novalidate @submit.prevent="confirmTwoFactor">
-          <p class="text-sm text-slate-700">1. Escaneie o QR code no aplicativo autenticador.</p>
-          <img :src="setup.qr" alt="QR code para o aplicativo autenticador" class="h-48 w-48 rounded ring-1 ring-slate-200" data-test="qr" />
-          <p class="text-xs text-slate-500">
-            Não consegue escanear? Digite a chave: <code class="break-all font-mono text-slate-700">{{ setup.secret }}</code>
+          <p class="text-sm text-fg-soft">1. Escaneie o QR code no aplicativo autenticador.</p>
+          <img :src="setup.qr" alt="QR code para o aplicativo autenticador" class="h-48 w-48 rounded-lg bg-white p-2 ring-1 ring-line" data-test="qr" />
+          <p class="text-xs text-fg-muted">
+            Não consegue escanear? Digite a chave: <code class="break-all font-mono text-fg-soft">{{ setup.secret }}</code>
           </p>
-          <p class="text-sm text-slate-700">2. Digite o código de 6 dígitos que aparece no aplicativo.</p>
+          <p class="text-sm text-fg-soft">2. Digite o código de 6 dígitos que aparece no aplicativo.</p>
           <BaseInput id="two_factor_code" v-model="code" label="Código" autocomplete="one-time-code" :error="twoFactor.fieldErrors.value.code" />
-          <div class="w-40"><BaseButton :loading="twoFactor.submitting.value">Ligar</BaseButton></div>
+          <BaseButton inline :loading="twoFactor.submitting.value">Ligar</BaseButton>
         </form>
 
         <form v-else class="space-y-3" novalidate @submit.prevent="auth.user?.two_factor_enabled ? regenerateCodes() : startTwoFactor()">
@@ -159,10 +161,10 @@ async function disableTwoFactor() {
             <BaseButton :loading="twoFactor.submitting.value">Configurar o aplicativo</BaseButton>
           </div>
           <div v-else class="flex flex-wrap gap-3">
-            <div class="w-56"><BaseButton :loading="twoFactor.submitting.value">Gerar códigos novos</BaseButton></div>
+            <BaseButton inline :loading="twoFactor.submitting.value">Gerar códigos novos</BaseButton>
             <button
               type="button"
-              class="rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60"
+              class="btn-danger"
               :disabled="twoFactor.submitting.value"
               data-test="disable-two-factor"
               @click="disableTwoFactor"
@@ -173,5 +175,6 @@ async function disableTwoFactor() {
         </form>
       </div>
     </section>
+    </div>
   </AppLayout>
 </template>

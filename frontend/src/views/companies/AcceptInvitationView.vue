@@ -50,21 +50,21 @@ async function accept() {
       <FormAlert :message="message" />
 
       <template v-if="auth.isAuthenticated">
-        <p class="text-slate-500">Você está logado como {{ auth.user?.email }}.</p>
+        <p class="text-fg-muted">Você está logado como {{ auth.user?.email }}.</p>
         <BaseButton type="button" :loading="submitting" @click="accept">Aceitar convite</BaseButton>
       </template>
       <template v-else>
-        <p class="text-slate-500">Entre ou crie sua conta com o e-mail convidado para aceitar.</p>
+        <p class="text-fg-muted">Entre ou crie sua conta com o e-mail convidado para aceitar.</p>
         <div class="flex gap-3">
           <RouterLink
             :to="{ name: 'login', query: { redirect: route.fullPath } }"
-            class="flex-1 rounded-lg bg-brand-600 px-4 py-2 text-center font-semibold text-white hover:bg-brand-700"
+            class="btn-primary flex-1 text-center"
           >
             Entrar
           </RouterLink>
           <RouterLink
             :to="{ name: 'register', query: { redirect: route.fullPath } }"
-            class="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-center font-semibold text-slate-700 hover:bg-slate-50"
+            class="btn-secondary flex-1 text-center font-semibold text-fg-soft"
           >
             Criar conta
           </RouterLink>

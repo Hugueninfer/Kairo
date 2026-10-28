@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import AppLogo from '@/components/ui/AppLogo.vue'
 import { formatMoney, toCents } from '@/composables/money'
 import { useApiForm } from '@/composables/useApiForm'
 import { toApiError } from '@/services/http'
@@ -54,85 +55,85 @@ onMounted(async () => {
 
 <template>
   <main class="mx-auto max-w-3xl space-y-6 px-4 py-10">
-    <p class="text-center text-sm text-slate-500">Orçamento enviado pelo <span class="font-bold text-brand-600">Kairo</span></p>
+    <p class="flex items-center justify-center gap-2 text-sm text-fg-muted">Orçamento enviado pelo <AppLogo :height="16" /></p>
 
     <FormAlert :message="loadError" />
 
     <template v-if="quote">
-      <header class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <p class="text-sm text-slate-500">{{ quote.company.name }} · Orçamento {{ quote.number }}</p>
-        <h1 class="mt-1 text-2xl font-semibold">{{ quote.title }}</h1>
-        <p class="mt-1 text-sm text-slate-600">Para {{ quote.client.name }} · válido até {{ date(quote.valid_until) }}</p>
+      <header class="card p-6">
+        <p class="text-sm text-fg-muted">{{ quote.company.name }} · Orçamento {{ quote.number }}</p>
+        <h1 class="mt-1 text-2xl font-semibold tracking-tight">{{ quote.title }}</h1>
+        <p class="mt-1 text-sm text-fg-muted">Para {{ quote.client.name }} · válido até {{ date(quote.valid_until) }}</p>
         <p v-if="quote.introduction" class="mt-4 whitespace-pre-line text-sm">{{ quote.introduction }}</p>
       </header>
 
-      <section class="overflow-x-auto rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <table class="w-full min-w-[520px] text-sm">
-          <thead>
-            <tr class="border-b border-slate-200 text-left text-xs text-slate-500">
-              <th class="pb-2 font-medium">Descrição</th>
-              <th class="pb-2 text-right font-medium">Qtd.</th>
-              <th class="pb-2 text-right font-medium">Valor unitário</th>
-              <th class="pb-2 text-right font-medium">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(item, index) in quote.items" :key="index" class="border-b border-slate-100">
-              <td class="py-2">{{ item.description }}</td>
-              <td class="py-2 text-right tabular-nums">{{ quantity(item.quantity) }} {{ item.type.unit }}</td>
-              <td class="py-2 text-right tabular-nums">{{ money(item.unit_price) }}</td>
-              <td class="py-2 text-right tabular-nums">{{ money(item.total) }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <dl class="mt-4 ml-auto w-full max-w-xs space-y-1 text-sm">
-          <div class="flex justify-between"><dt class="text-slate-600">Subtotal</dt><dd class="tabular-nums">{{ money(quote.subtotal) }}</dd></div>
-          <div v-if="hasDiscount" class="flex justify-between"><dt class="text-slate-600">Desconto</dt><dd class="tabular-nums">− {{ money(quote.discount) }}</dd></div>
-          <div v-if="hasTax" class="flex justify-between"><dt class="text-slate-600">Impostos ({{ quantity(quote.tax_rate) }}%)</dt><dd class="tabular-nums">{{ money(quote.tax_amount) }}</dd></div>
-          <div class="flex justify-between border-t border-slate-200 pt-2 text-base font-semibold"><dt>Total</dt><dd class="tabular-nums" data-test="public-total">{{ money(quote.total) }}</dd></div>
+      <section class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="table-clean min-w-[520px]">
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th class="text-right">Qtd.</th>
+                <th class="text-right">Valor unitário</th>
+                <th class="text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in quote.items" :key="index">
+                <td class="text-fg">{{ item.description }}</td>
+                <td class="text-right whitespace-nowrap text-fg-muted tabular-nums">{{ quantity(item.quantity) }} {{ item.type.unit }}</td>
+                <td class="text-right whitespace-nowrap text-fg-muted tabular-nums">{{ money(item.unit_price) }}</td>
+                <td class="text-right font-medium whitespace-nowrap tabular-nums">{{ money(item.total) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <dl class="ml-auto w-full max-w-xs space-y-1 border-t border-line p-5 text-sm sm:border-t-0">
+          <div class="flex justify-between"><dt class="text-fg-muted">Subtotal</dt><dd class="tabular-nums">{{ money(quote.subtotal) }}</dd></div>
+          <div v-if="hasDiscount" class="flex justify-between"><dt class="text-fg-muted">Desconto</dt><dd class="tabular-nums">− {{ money(quote.discount) }}</dd></div>
+          <div v-if="hasTax" class="flex justify-between"><dt class="text-fg-muted">Impostos ({{ quantity(quote.tax_rate) }}%)</dt><dd class="tabular-nums">{{ money(quote.tax_amount) }}</dd></div>
+          <div class="flex justify-between border-t border-line pt-2 text-base font-semibold"><dt>Total</dt><dd class="tabular-nums" data-test="public-total">{{ money(quote.total) }}</dd></div>
         </dl>
       </section>
 
-      <section v-if="quote.terms" class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <h2 class="mb-2 font-semibold">Condições</h2>
+      <section v-if="quote.terms" class="card p-6">
+        <h2 class="card-title mb-2">Condições</h2>
         <p class="whitespace-pre-line text-sm">{{ quote.terms }}</p>
       </section>
 
-      <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200" data-test="decision">
+      <section class="card p-6" data-test="decision">
         <template v-if="quote.status.value === 'accepted'">
-          <p class="font-semibold text-emerald-700">Orçamento aceito por {{ quote.signer_name }} em {{ date(quote.decided_at!) }}.</p>
-          <p class="mt-1 text-sm text-slate-600">Obrigado! {{ quote.company.name }} já foi avisado e vai entrar em contato.</p>
+          <p class="font-semibold text-emerald-400">Orçamento aceito por {{ quote.signer_name }} em {{ date(quote.decided_at!) }}.</p>
+          <p class="mt-1 text-sm text-fg-muted">Obrigado! {{ quote.company.name }} já foi avisado e vai entrar em contato.</p>
         </template>
         <template v-else-if="quote.status.value === 'rejected'">
-          <p class="font-semibold text-slate-700">Você recusou este orçamento em {{ date(quote.decided_at!) }}.</p>
-          <p class="mt-1 text-sm text-slate-600">{{ quote.company.name }} já foi avisado.</p>
+          <p class="font-semibold text-fg-soft">Você recusou este orçamento em {{ date(quote.decided_at!) }}.</p>
+          <p class="mt-1 text-sm text-fg-muted">{{ quote.company.name }} já foi avisado.</p>
         </template>
         <template v-else-if="!quote.awaits_decision">
-          <p class="font-semibold text-amber-700">A validade deste orçamento terminou.</p>
-          <p class="mt-1 text-sm text-slate-600">Se ainda tiver interesse, peça uma nova proposta a {{ quote.company.name }}.</p>
+          <p class="font-semibold text-amber-400">A validade deste orçamento terminou.</p>
+          <p class="mt-1 text-sm text-fg-muted">Se ainda tiver interesse, peça uma nova proposta a {{ quote.company.name }}.</p>
         </template>
         <template v-else>
           <div v-if="!mode" class="flex flex-wrap gap-3">
-            <button type="button" class="rounded-lg bg-emerald-600 px-5 py-2 font-semibold text-white hover:bg-emerald-700" @click="mode = 'accept'">Aceitar orçamento</button>
-            <button type="button" class="rounded-lg border border-slate-300 px-5 py-2 font-semibold text-slate-700 hover:bg-slate-50" @click="mode = 'reject'">Recusar</button>
+            <button type="button" class="btn-success px-5" @click="mode = 'accept'">Aceitar orçamento</button>
+            <button type="button" class="btn-secondary px-5 font-semibold text-fg-soft" @click="mode = 'reject'">Recusar</button>
           </div>
           <form v-else class="space-y-4" novalidate @submit.prevent="decide">
             <template v-if="mode === 'accept'">
-              <p class="text-sm text-slate-600">
+              <p class="text-sm text-fg-muted">
                 Para aceitar, digite seu nome completo. Ele fica registrado como sua assinatura, junto com a data e o endereço de acesso.
               </p>
               <BaseInput id="signer-name" v-model="signerName" label="Nome completo" autocomplete="name" :error="decision.fieldErrors.value.signer_name" />
             </template>
             <template v-else>
-              <label for="reject-note" class="block text-sm font-medium text-slate-700">Quer contar o motivo? (opcional)</label>
-              <textarea id="reject-note" v-model="note" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+              <label for="reject-note" class="field-label">Quer contar o motivo? (opcional)</label>
+              <textarea id="reject-note" v-model="note" rows="3" class="field w-full" />
             </template>
             <FormAlert v-if="Object.keys(decision.fieldErrors.value).length === 0" :message="decision.message.value" />
             <div class="flex items-center gap-3">
-              <div class="w-56">
-                <BaseButton :loading="decision.submitting.value">{{ mode === 'accept' ? 'Confirmar aceite' : 'Confirmar recusa' }}</BaseButton>
-              </div>
-              <button type="button" class="text-sm text-slate-600 hover:underline" @click="mode = null">Voltar</button>
+              <BaseButton inline :loading="decision.submitting.value">{{ mode === 'accept' ? 'Confirmar aceite' : 'Confirmar recusa' }}</BaseButton>
+              <button type="button" class="text-sm text-fg-muted hover:underline" @click="mode = null">Voltar</button>
             </div>
           </form>
         </template>

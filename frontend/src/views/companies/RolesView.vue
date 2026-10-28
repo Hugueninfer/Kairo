@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { useApiForm } from '@/composables/useApiForm'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { toApiError } from '@/services/http'
@@ -105,30 +106,29 @@ onMounted(load)
 
 <template>
   <AppLayout>
-    <div>
-      <h1 class="text-2xl font-semibold">Papéis e permissões</h1>
-      <p class="mt-1 text-sm text-slate-600">
-        Cada pessoa tem um papel na empresa. Marque o que cada papel pode fazer. O dono sempre pode tudo.
-      </p>
-    </div>
+    <PageHeader
+      title="Papéis e permissões"
+      subtitle="Cada pessoa tem um papel na empresa. Marque o que cada papel pode fazer. O dono sempre pode tudo."
+      :breadcrumbs="[{ label: 'Empresa', to: '/empresa' }, { label: 'Papéis' }]"
+    />
 
     <FormAlert :message="loadError" />
 
-    <section v-if="roles.length" class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+    <section v-if="roles.length" class="card overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full min-w-[640px] text-sm" data-test="permission-matrix">
           <thead>
-            <tr class="border-b border-slate-200 text-left">
-              <th class="py-2 pr-4 font-medium text-slate-500">Permissão</th>
-              <th v-for="role in roles" :key="role.id" class="px-2 py-2 text-center font-semibold">
+            <tr class="border-b border-line bg-surface-2/60 text-left">
+              <th class="py-3 pr-4 pl-5 text-xs font-medium text-fg-muted">Permissão</th>
+              <th v-for="role in roles" :key="role.id" class="px-2 py-3 text-center font-semibold text-fg">
                 <span class="block">{{ role.name }}</span>
-                <span class="block text-xs font-normal text-slate-500">
+                <span class="block text-xs font-normal text-fg-muted">
                   {{ role.members_count }} {{ role.members_count === 1 ? 'pessoa' : 'pessoas' }}
                 </span>
                 <button
                   v-if="!role.is_system"
                   type="button"
-                  class="text-xs font-normal text-red-600 hover:underline"
+                  class="mt-1 text-xs font-normal text-red-400 hover:text-red-300"
                   @click="removeRole(role)"
                 >
                   Apagar
@@ -138,16 +138,16 @@ onMounted(load)
           </thead>
           <tbody v-for="group in catalog" :key="group.group">
             <tr>
-              <th :colspan="roles.length + 1" class="pt-4 pb-1 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <th :colspan="roles.length + 1" class="px-5 pt-5 pb-2 text-left text-[11px] font-semibold tracking-wider text-fg-subtle uppercase">
                 {{ group.group }}
               </th>
             </tr>
-            <tr v-for="permission in group.permissions" :key="permission.key" class="border-b border-slate-100">
-              <td class="py-2 pr-4">{{ permission.label }}</td>
+            <tr v-for="permission in group.permissions" :key="permission.key" class="border-b border-line hover:bg-surface-2/50">
+              <td class="py-2.5 pr-4 pl-5 text-fg-soft">{{ permission.label }}</td>
               <td v-for="role in roles" :key="role.id" class="px-2 py-2 text-center">
                 <input
                   type="checkbox"
-                  class="h-4 w-4 accent-brand-600"
+                  class="h-4 w-4"
                   :checked="hasPermission(role, permission.key)"
                   :disabled="role.is_locked"
                   :aria-label="`${role.name}: ${permission.label}`"
@@ -160,27 +160,25 @@ onMounted(load)
         </table>
       </div>
 
-      <div class="mt-4 flex flex-wrap items-center gap-3">
-        <div class="w-48">
-          <BaseButton type="button" :loading="saving" :disabled="changedRoles.length === 0" data-test="save-permissions" @click="saveChanges">
-            Salvar alterações
-          </BaseButton>
-        </div>
-        <span v-if="changedRoles.length" class="text-sm text-slate-500">{{ changedRoles.length }} papel(is) com alterações</span>
+      <div class="flex flex-wrap items-center gap-3 border-t border-line px-5 py-4">
+        <BaseButton type="button" inline :loading="saving" :disabled="changedRoles.length === 0" data-test="save-permissions" @click="saveChanges">
+          Salvar alterações
+        </BaseButton>
+        <span v-if="changedRoles.length" class="text-sm text-fg-muted">{{ changedRoles.length }} papel(is) com alterações</span>
       </div>
-      <div class="mt-2 space-y-2">
+      <div v-if="saveError || saved" class="space-y-2 px-5 pb-4">
         <FormAlert :message="saveError" />
         <FormAlert :message="saved" variant="success" />
       </div>
     </section>
 
-    <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-      <h2 class="mb-4 font-semibold">Novo papel</h2>
+    <section class="card p-6">
+      <h2 class="card-title mb-4">Novo papel</h2>
       <form class="flex flex-col gap-3 sm:flex-row sm:items-start" novalidate @submit.prevent="createRole">
         <div class="flex-1">
           <BaseInput id="role-name" v-model="newRoleName" label="Nome do papel" :error="createForm.fieldErrors.value.name" />
         </div>
-        <div class="sm:mt-6 sm:w-40">
+        <div class="sm:mt-[26px] sm:w-40">
           <BaseButton :loading="createForm.submitting.value">Criar</BaseButton>
         </div>
       </form>
