@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\BoardElementType;
 use App\Models\Concerns\BelongsToCompany;
+use Database\Factories\BoardElementFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -22,7 +24,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class BoardElement extends Model
 {
-    use BelongsToCompany;
+    /** @use HasFactory<BoardElementFactory> */
+    use BelongsToCompany, HasFactory;
 
     /**
      * @return array<string, string>

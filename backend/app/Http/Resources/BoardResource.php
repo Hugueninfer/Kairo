@@ -20,6 +20,8 @@ class BoardResource extends JsonResource
             'id' => $this->ulid,
             'title' => $this->title,
             'updated_at' => $this->updated_at->toIso8601String(),
+            // Link de leitura para o cliente, quando o board está compartilhado.
+            'share_url' => $this->share_token === null ? null : rtrim((string) config('app.frontend_url'), '/').'/b/'.$this->share_token,
             'project' => $this->whenLoaded('project', fn () => $this->project === null ? null : [
                 'id' => $this->project->ulid,
                 'name' => $this->project->name,

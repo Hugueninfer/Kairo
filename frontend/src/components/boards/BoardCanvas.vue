@@ -12,12 +12,13 @@ import {
   Transformer as VTransformer,
 } from 'vue-konva'
 import { BOARD_COLORS, STROKE_COLORS, newArrow, newElement, type BoardDocument } from '@/composables/boardDocument'
+import type { RemoteCursor } from '@/composables/useBoardRealtime'
 import type { BoardElement, BoardElementType } from '@/types/api'
 
 type Tool = 'select' | BoardElementType
 
-const props = defineProps<{ doc: BoardDocument; editable: boolean }>()
-const emit = defineEmits<{ change: [] }>()
+const props = withDefaults(defineProps<{ doc: BoardDocument; editable: boolean; cursors?: RemoteCursor[] }>(), { cursors: () => [] })
+const emit = defineEmits<{ change: []; pointer: [point: { x: number; y: number } | null] }>()
 
 const FONT = 'Inter, ui-sans-serif, system-ui, sans-serif'
 const tools: { value: Tool; label: string; key: string }[] = [
@@ -129,6 +130,13 @@ function onTransformEnd(element: BoardElement, event: Konva.KonvaEventObject<Eve
   props.doc.update(element.id, { x: Math.round(node.x()), y: Math.round(node.y()), width, height, rotation: Math.round(node.rotation()) })
   changed()
 }
+
+/** Cursores de quem está no board, na posição da tela (acompanhando pan e zoom). */
+const visibleCursors = computed(() =>
+  props.cursors
+    .map((cursor) => ({ ...cursor, left: cursor.x * view.scale + view.x, top: cursor.y * view.scale + view.y }))
+    .filter((cursor) => cursor.left >= -20 && cursor.top >= -20 && cursor.left <= size.width && cursor.top <= size.height),
+)
 
 function onStageDragEnd(event: Konva.KonvaEventObject<DragEvent>) {
   if (event.target !== stage()) return
@@ -366,8 +374,17 @@ defineExpose({ fit })
       :class="tool === 'select' ? 'cursor-default' : 'cursor-crosshair'"
       style="background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px"
       data-test="board-canvas"
+      @mouseleave="emit('pointer', null)"
     >
-      <VStage ref="stageRef" :config="stageConfig" @click="onStageClick" @tap="onStageClick" @wheel="onWheel" @dragend="onStageDragEnd">
+      <VStage
+        ref="stageRef"
+        :config="stageConfig"
+        @click="onStageClick"
+        @tap="onStageClick"
+        @wheel="onWheel"
+        @dragend="onStageDragEnd"
+        @mousemove="emit('pointer', pointer())"
+      >
         <VLayer>
           <template v-for="element in doc.ordered.value" :key="element.id">
             <VArrow v-if="element.type === 'arrow'" :config="arrowConfig(element)" @click="select(element.id)" @tap="select(element.id)" />
@@ -456,6 +473,21 @@ defineExpose({ fit })
         @blur="finishEdit"
         @keydown.escape.prevent="finishEdit"
       />
+
+      <div
+        v-for="cursor in visibleCursors"
+        :key="cursor.id"
+        class="pointer-events-none absolute left-0 top-0 transition-transform duration-75 ease-linear"
+        :style="{ transform: `translate(${cursor.left}px, ${cursor.top}px)` }"
+        data-test="remote-cursor"
+      >
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+          <path d="M1 1l6.5 15 2.2-6.3L16 7.5z" :fill="cursor.color" stroke="white" stroke-width="1.2" stroke-linejoin="round" />
+        </svg>
+        <span class="ml-3 -mt-1 inline-block whitespace-nowrap rounded px-1.5 py-0.5 text-xs font-medium text-white" :style="{ background: cursor.color }">
+          {{ cursor.name }}
+        </span>
+      </div>
 
       <p v-if="doc.elements.size === 0 && editable" class="pointer-events-none absolute inset-x-0 top-1/3 text-center text-sm text-slate-400">
         Board vazio. Escolha Nota, Retângulo ou Texto na barra e clique aqui para começar.

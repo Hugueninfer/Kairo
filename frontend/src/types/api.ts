@@ -352,8 +352,29 @@ export interface Board {
   id: string
   title: string
   updated_at: string
+  /** Link de leitura para o cliente; nulo quando o board não está compartilhado. */
+  share_url: string | null
   project?: { id: string; name: string } | null
   creator?: { name: string } | null
   elements_count?: number
   elements?: BoardElement[]
+}
+
+export interface BoardVersion {
+  id: string
+  label: string | null
+  automatic: boolean
+  element_count: number
+  created_at: string
+  author: { name: string } | null
+  /** Só vem ao abrir uma versão, não na lista. */
+  elements?: BoardElement[]
+}
+
+/** Board aberto pelo cliente com o link de leitura. */
+export interface PublicBoard {
+  title: string
+  company: { name: string }
+  updated_at: string
+  elements: BoardElement[]
 }

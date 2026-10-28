@@ -21,4 +21,17 @@ final readonly class BoardElementData extends Data
         public int $z_index,
         public array $props,
     ) {}
+
+    /**
+     * O elemento como a API devolve (com "id" em vez de "ulid"), para avisar quem está no board.
+     *
+     * @return array<string, mixed>
+     */
+    public function toApi(): array
+    {
+        $element = $this->toArray();
+        unset($element['ulid']);
+
+        return ['id' => $this->ulid, ...$element];
+    }
 }

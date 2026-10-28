@@ -22,4 +22,16 @@ interface BoardElementRepository extends RepositoryInterface
      * @param  list<string>  $deletes
      */
     public function syncElements(Board $board, array $upserts, array $deletes, ?int $userId): void;
+
+    /**
+     * Todos os elementos do board no formato da API (id, type, x, y, ..., props), na ordem de empilhamento.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function snapshotOf(Board $board): array;
+
+    /**
+     * @return list<string>
+     */
+    public function ulidsOf(Board $board): array;
 }

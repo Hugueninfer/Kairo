@@ -19,6 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    // Autorização dos canais de WebSocket (Reverb) dentro da API da empresa ativa:
+    // mesma sessão do Sanctum, mesmo CSRF e mesmo filtro de tenant das outras rotas.
+    ->withBroadcasting(__DIR__.'/../routes/channels.php', [
+        'prefix' => 'api/v1/company',
+        'middleware' => ['api', 'auth:sanctum', 'tenant'],
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         // Sanctum em modo SPA: o front autentica por cookie de sessão + CSRF, sem token no navegador.
         $middleware->statefulApi();

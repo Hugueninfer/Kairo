@@ -13,6 +13,7 @@ const board: Board = {
   id: 'b1',
   title: 'Mapa do site',
   updated_at: '2026-10-27T15:00:00Z',
+  share_url: null,
   project: { id: 'p1', name: 'Site da padaria' },
   elements_count: 3,
 }

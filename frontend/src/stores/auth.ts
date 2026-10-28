@@ -35,6 +35,8 @@ export const useAuthStore = defineStore('auth', () => {
       await authApi.logout()
     } finally {
       user.value = null
+      // Fecha o WebSocket dos boards, se estiver aberto (carregado só quando um board foi aberto).
+      void import('@/services/realtime').then(({ disconnectRealtime }) => disconnectRealtime())
     }
   }
 

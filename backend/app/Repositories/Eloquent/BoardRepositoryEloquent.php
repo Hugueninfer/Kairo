@@ -38,6 +38,22 @@ class BoardRepositoryEloquent extends BaseRepository implements BoardRepository
         return $this->filteredQuery()->where('ulid', $ulid)->first();
     }
 
+    public function findById(int $id): ?Board
+    {
+        /** @var Board|null */
+        return Board::query()->withoutGlobalScope('company')->find($id);
+    }
+
+    public function findShared(string $token): ?Board
+    {
+        /** @var Board|null */
+        return Board::query()
+            ->withoutGlobalScope('company')
+            ->where('share_token', $token)
+            ->with(['company:id,name', 'elements' => fn ($query) => $query->withoutGlobalScope('company')])
+            ->first();
+    }
+
     public function loadDetails(Board $board): Board
     {
         return $board->load(['project:id,ulid,name,deleted_at', 'creator:id,name', 'elements'])->loadCount('elements');

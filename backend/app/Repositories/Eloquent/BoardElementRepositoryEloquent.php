@@ -5,6 +5,7 @@ namespace App\Repositories\Eloquent;
 use App\Models\Board;
 use App\Models\BoardElement;
 use App\Repositories\Contracts\BoardElementRepository;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class BoardElementRepositoryEloquent extends BaseRepository implements BoardElementRepository
@@ -53,5 +54,42 @@ class BoardElementRepositoryEloquent extends BaseRepository implements BoardElem
                 ['type', 'x', 'y', 'width', 'height', 'rotation', 'z_index', 'props', 'updated_by', 'updated_at'],
             );
         });
+    }
+
+    public function snapshotOf(Board $board): array
+    {
+        return $this->ofBoard($board)
+            ->orderBy('z_index')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (BoardElement $element) => [
+                'id' => $element->ulid,
+                'type' => $element->type->value,
+                'x' => $element->x,
+                'y' => $element->y,
+                'width' => $element->width,
+                'height' => $element->height,
+                'rotation' => $element->rotation,
+                'z_index' => $element->z_index,
+                'props' => $element->props,
+            ])
+            ->values()
+            ->all();
+    }
+
+    public function ulidsOf(Board $board): array
+    {
+        /** @var list<string> */
+        return $this->ofBoard($board)->pluck('ulid')->all();
+    }
+
+    /**
+     * Elementos do board sem depender da empresa ativa: o board já foi conferido antes.
+     *
+     * @return Builder<BoardElement>
+     */
+    private function ofBoard(Board $board): Builder
+    {
+        return BoardElement::query()->withoutGlobalScope('company')->where('board_id', $board->id);
     }
 }

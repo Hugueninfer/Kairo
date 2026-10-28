@@ -71,3 +71,46 @@ describe('useBoardDocument', () => {
     expect(doc.takeChanges().upserts.map((element) => element.id)).toEqual([note.id])
   })
 })
+
+describe('alterações de outras pessoas', () => {
+  it('aplica o que chegou sem virar pendência e sem passar por cima do que não foi salvo aqui', () => {
+    const mine = newElement('note', 0, 0, 1)
+    const theirs = newElement('rect', 300, 0, 2)
+    const gone = newElement('ellipse', 600, 0, 3)
+    const doc = useBoardDocument([mine, theirs, gone])
+
+    doc.update(mine.id, { x: 50 })
+    doc.takeChanges()
+    doc.update(mine.id, { x: 70 })
+
+    const created = newElement('text', 0, 400, 4)
+    doc.applyRemote(
+      [
+        { ...mine, x: 999 },
+        { ...theirs, x: 333 },
+        created,
+      ],
+      [gone.id],
+    )
+
+    expect(doc.get(mine.id)?.x).toBe(70)
+    expect(doc.get(theirs.id)?.x).toBe(333)
+    expect(doc.get(created.id)).toBeDefined()
+    expect(doc.get(gone.id)).toBeUndefined()
+    expect(doc.takeChanges()).toEqual({ upserts: [expect.objectContaining({ id: mine.id, x: 70 })], deletes: [] })
+  })
+
+  it('ao recarregar troca tudo, mas guarda as pendências daqui', () => {
+    const mine = newElement('note', 0, 0, 1)
+    const old = newElement('rect', 300, 0, 2)
+    const doc = useBoardDocument([mine, old])
+    doc.update(mine.id, { props: { text: 'ainda não salvo' } })
+
+    const restored = newElement('ellipse', 0, 0, 1)
+    doc.reset([restored, { ...mine, props: { text: 'versão antiga' } }])
+
+    expect([...doc.elements.keys()].sort()).toEqual([mine.id, restored.id].sort())
+    expect(doc.get(mine.id)?.props.text).toBe('ainda não salvo')
+    expect(doc.hasChanges()).toBe(true)
+  })
+})

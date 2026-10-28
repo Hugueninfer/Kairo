@@ -161,7 +161,29 @@ export function useBoardDocument(initial: BoardElement[] = []) {
     for (const id of changes.deletes) if (!elements.has(id)) deleted.add(id)
   }
 
-  return { elements, ordered, topZ, get, upsert, update, remove, bringToFront, hasChanges, takeChanges, restore }
+  /**
+   * Alterações salvas por outra pessoa. Entram sem virar pendência daqui e não passam por cima
+   * do que ainda não foi salvo neste navegador.
+   */
+  function applyRemote(upserts: BoardElement[], deletes: string[]) {
+    for (const element of upserts) {
+      if (dirty.has(element.id) || deleted.has(element.id)) continue
+      elements.set(element.id, { ...element, props: { ...element.props } })
+    }
+    for (const id of deletes) {
+      if (!dirty.has(id)) elements.delete(id)
+    }
+  }
+
+  /** Troca tudo pelo que veio da API (versão restaurada, reconexão), mantendo as pendências daqui. */
+  function reset(next: BoardElement[]) {
+    const pending = [...dirty].map((id) => elements.get(id)).filter((element): element is BoardElement => element !== undefined)
+    elements.clear()
+    for (const element of next) if (!deleted.has(element.id)) elements.set(element.id, element)
+    for (const element of pending) elements.set(element.id, element)
+  }
+
+  return { elements, ordered, topZ, get, upsert, update, remove, bringToFront, hasChanges, takeChanges, restore, applyRemote, reset }
 }
 
 export type BoardDocument = ReturnType<typeof useBoardDocument>
