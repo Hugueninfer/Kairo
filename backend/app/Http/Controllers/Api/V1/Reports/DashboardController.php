@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\Reports\DashboardService;
 use App\Support\TenantContext;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+#[Group('Painel e relatórios', weight: 14)]
 class DashboardController extends Controller
 {
     public function __construct(private readonly DashboardService $dashboard) {}

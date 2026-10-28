@@ -13,12 +13,14 @@ use App\Models\User;
 use App\Services\Timesheet\TimeEntryService;
 use App\Services\Timesheet\TimesheetService;
 use App\Support\Csv;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+#[Group('Planilha de horas', weight: 9)]
 class TimeEntryController extends Controller
 {
     public function __construct(

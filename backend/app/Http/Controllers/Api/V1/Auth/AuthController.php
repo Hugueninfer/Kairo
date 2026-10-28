@@ -10,10 +10,12 @@ use App\Http\Requests\Auth\TwoFactorCodeRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\Auth\AuthService;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
+#[Group('Autenticação', weight: 1)]
 class AuthController extends Controller
 {
     public function __construct(private readonly AuthService $auth) {}

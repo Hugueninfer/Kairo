@@ -32,6 +32,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->throttleApi();
         $middleware->append(SecurityHeaders::class);
 
+        // Atrás do Caddy (produção): confia no proxy para saber o IP real e que a conexão é HTTPS.
+        $proxies = env('TRUSTED_PROXIES');
+        if (is_string($proxies) && $proxies !== '') {
+            $middleware->trustProxies(at: $proxies === '*' ? '*' : explode(',', $proxies));
+        }
+
         // A empresa ativa precisa estar definida antes do route model binding,
         // para os models de empresa já serem buscados com o filtro de tenant.
         $middleware->alias(['tenant' => ResolveTenant::class]);

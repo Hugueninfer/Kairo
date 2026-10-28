@@ -7,8 +7,10 @@ use App\Http\Requests\Reports\ListAuditRequest;
 use App\Http\Resources\ActivityResource;
 use App\Services\Audit\AuditService;
 use App\Support\TenantContext;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+#[Group('Histórico', weight: 15)]
 class AuditController extends Controller
 {
     public function __construct(

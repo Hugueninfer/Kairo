@@ -8,10 +8,12 @@ use App\Http\Requests\Clients\ListClientsRequest;
 use App\Http\Resources\ClientResource;
 use App\Models\Client;
 use App\Services\Clients\ClientService;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 
+#[Group('Clientes', weight: 6)]
 class ClientController extends Controller
 {
     public function __construct(private readonly ClientService $clients) {}

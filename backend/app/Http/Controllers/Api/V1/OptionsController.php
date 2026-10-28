@@ -15,11 +15,13 @@ use App\Enums\ReminderStage;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 
 /**
  * Opções dos selects do front, direto dos Enums (uma fonte só para valores e rótulos).
  */
+#[Group('Opções', weight: 5)]
 class OptionsController extends Controller
 {
     public function __invoke(): JsonResponse

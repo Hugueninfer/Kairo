@@ -8,10 +8,12 @@ use App\Http\Resources\RoleResource;
 use App\Models\Role;
 use App\Services\Companies\RoleService;
 use App\Support\TenantContext;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 
+#[Group('Papéis e permissões', weight: 4)]
 class RoleController extends Controller
 {
     public function __construct(private readonly RoleService $roles) {}

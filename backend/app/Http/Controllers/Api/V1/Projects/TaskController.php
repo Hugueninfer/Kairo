@@ -10,11 +10,13 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use App\Services\Projects\TaskService;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 
+#[Group('Tarefas', weight: 8)]
 class TaskController extends Controller
 {
     public function __construct(private readonly TaskService $tasks) {}

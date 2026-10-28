@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api\V1\Boards;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PublicBoardResource;
 use App\Services\Boards\BoardService;
+use Dedoc\Scramble\Attributes\Group;
 
 /**
  * Board aberto pelo cliente com o link de leitura, sem login.
  */
+#[Group('Links públicos', weight: 17)]
 class PublicBoardController extends Controller
 {
     public function __construct(private readonly BoardService $boards) {}

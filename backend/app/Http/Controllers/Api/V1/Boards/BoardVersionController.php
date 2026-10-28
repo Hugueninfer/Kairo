@@ -9,10 +9,12 @@ use App\Http\Resources\BoardVersionResource;
 use App\Models\Board;
 use App\Models\User;
 use App\Services\Boards\BoardVersionService;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+#[Group('Boards', weight: 13)]
 class BoardVersionController extends Controller
 {
     public function __construct(private readonly BoardVersionService $versions) {}

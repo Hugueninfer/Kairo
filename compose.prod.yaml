@@ -1,0 +1,137 @@
+# Kairo em produção, num servidor com Docker (uma VPS, por exemplo).
+#
+#   cp .env.production.example .env.production   # e preencha
+#   docker compose -f compose.prod.yaml --env-file .env.production up -d --build
+#
+# O serviço "web" (Caddy) é a única porta aberta: serve o front, emite o HTTPS
+# e repassa /api para a API e o WebSocket para o Reverb.
+
+x-api: &api
+  build:
+    context: ./backend
+  image: kairo-api
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  volumes:
+    - storage:/app/storage
+  environment:
+    APP_NAME: Kairo
+    APP_ENV: production
+    APP_DEBUG: "false"
+    APP_KEY: ${APP_KEY:?defina APP_KEY}
+    APP_URL: https://${APP_DOMAIN}
+    APP_LOCALE: pt_BR
+    FRONTEND_URL: https://${APP_DOMAIN}
+    SANCTUM_STATEFUL_DOMAINS: ${APP_DOMAIN}
+    SESSION_DOMAIN: ${APP_DOMAIN}
+    SESSION_SECURE_COOKIE: "true"
+    SESSION_DRIVER: redis
+    SESSION_ENCRYPT: "true"
+    TRUSTED_PROXIES: "*"
+    LOG_CHANNEL: stderr
+    LOG_LEVEL: ${LOG_LEVEL:-info}
+    DB_CONNECTION: pgsql
+    DB_HOST: postgres
+    DB_PORT: 5432
+    DB_DATABASE: kairo
+    DB_USERNAME: kairo
+    DB_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
+    REDIS_HOST: redis
+    CACHE_STORE: redis
+    QUEUE_CONNECTION: redis
+    BROADCAST_CONNECTION: reverb
+    REVERB_APP_ID: kairo
+    REVERB_APP_KEY: ${REVERB_APP_KEY:?defina REVERB_APP_KEY}
+    REVERB_APP_SECRET: ${REVERB_APP_SECRET:?defina REVERB_APP_SECRET}
+    # A API avisa o Reverb pela rede interna; o navegador chega nele pelo Caddy, em wss://.
+    REVERB_HOST: reverb
+    REVERB_PORT: 8080
+    REVERB_SCHEME: http
+    MAIL_MAILER: ${MAIL_MAILER:-smtp}
+    MAIL_HOST: ${MAIL_HOST:-}
+    MAIL_PORT: ${MAIL_PORT:-587}
+    MAIL_USERNAME: ${MAIL_USERNAME:-}
+    MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    MAIL_SCHEME: ${MAIL_SCHEME:-}
+    MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-nao-responda@example.com}
+    MAIL_FROM_NAME: Kairo
+    PAYMENT_GATEWAY: ${PAYMENT_GATEWAY:-fake}
+    FAKE_GATEWAY_WEBHOOK_TOKEN: ${FAKE_GATEWAY_WEBHOOK_TOKEN:-}
+
+services:
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_REVERB_APP_KEY: ${REVERB_APP_KEY}
+        VITE_REVERB_HOST: ${APP_DOMAIN}
+        VITE_REVERB_PORT: "443"
+        VITE_REVERB_SCHEME: https
+    restart: unless-stopped
+    depends_on:
+      - app
+      - reverb
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?defina APP_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+
+  app:
+    <<: *api
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8000/up"]
+      interval: 15s
+      retries: 5
+
+  queue:
+    <<: *api
+    command: ["php", "artisan", "queue:work", "redis", "--queue=mail,default", "--tries=3", "--max-time=3600"]
+
+  scheduler:
+    <<: *api
+    command: ["php", "artisan", "schedule:work"]
+
+  reverb:
+    <<: *api
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kairo
+      POSTGRES_USER: kairo
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kairo -d kairo"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  storage:
+  postgres-data:
+  redis-data:
+  caddy-data:
+  caddy-config:
