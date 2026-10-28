@@ -106,6 +106,12 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresCompany: true, permission: 'boards.view' },
   },
   {
+    path: '/conta',
+    name: 'account',
+    component: () => import('@/views/account/AccountView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/relatorios',
     name: 'reports',
     component: () => import('@/views/reports/ReportsView.vue'),

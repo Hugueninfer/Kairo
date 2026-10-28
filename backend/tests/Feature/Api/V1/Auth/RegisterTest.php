@@ -47,3 +47,15 @@ it('coloca o e-mail de verificação na fila de e-mails', function () {
         ->toBeInstanceOf(ShouldQueue::class)
         ->queue->toBe('mail');
 });
+
+it('responde em português quando passa do limite de tentativas', function () {
+    foreach (range(1, 6) as $attempt) {
+        fromSpa($this)->postJson('/api/v1/auth/forgot-password', ['email' => "ana{$attempt}@kairo.test"]);
+    }
+
+    fromSpa($this)->postJson('/api/v1/auth/forgot-password', ['email' => 'ana@kairo.test'])
+        ->assertStatus(429)
+        ->assertHeader('Retry-After')
+        ->assertJsonPath('code', 'too_many_attempts')
+        ->assertJsonPath('message', fn (string $message) => str_starts_with($message, 'Muitas tentativas. Tente de novo em'));
+});

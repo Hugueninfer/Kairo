@@ -3,6 +3,7 @@ export interface User {
   name: string
   email: string
   email_verified: boolean
+  two_factor_enabled: boolean
   created_at: string | null
 }
 

@@ -72,6 +72,11 @@ function chooseGroup(group: ReportGroup) {
   void load()
 }
 
+/** Texto que começa com =, +, -, @ viraria fórmula na planilha (CSV injection); números ficam como estão. */
+function safeCell(value: string): string {
+  return /^-?\d+(,\d+)?$/.test(value) || !/^[=+\-@\t\r]/.test(value) ? value : `'${value}`
+}
+
 /** CSV com ponto e vírgula, que o Excel em português abre direto nas colunas certas. */
 function downloadCsv() {
   if (!report.value) return
@@ -81,7 +86,7 @@ function downloadCsv() {
     ...report.value.rows.map((row) => [row.label, decimal(row.minutes / 60), decimal(row.billable_minutes / 60), decimal(Number(row.amount))]),
     ['Total', decimal(report.value.totals.minutes / 60), decimal(report.value.totals.billable_minutes / 60), decimal(Number(report.value.totals.amount))],
   ]
-  const csv = lines.map((line) => line.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(';')).join('\r\n')
+  const csv = lines.map((line) => line.map((cell) => `"${safeCell(String(cell)).replaceAll('"', '""')}"`).join(';')).join('\r\n')
   const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }))
   const link = document.createElement('a')
   link.href = url

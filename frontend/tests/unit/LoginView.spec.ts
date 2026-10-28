@@ -32,6 +32,8 @@ async function mountLogin() {
   return { wrapper, router }
 }
 
+const ana = { id: 1, name: 'Ana', email: 'ana@kairo.test', email_verified: true, two_factor_enabled: false, created_at: null }
+
 describe('LoginView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -53,18 +55,29 @@ describe('LoginView', () => {
   })
 
   it('vai para o painel depois de entrar', async () => {
-    vi.spyOn(authApi, 'login').mockResolvedValue({
-      id: 1,
-      name: 'Ana',
-      email: 'ana@kairo.test',
-      email_verified: true,
-      created_at: null,
-    })
+    vi.spyOn(authApi, 'login').mockResolvedValue({ user: ana })
     const { wrapper, router } = await mountLogin()
 
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
+    expect(router.currentRoute.value.path).toBe('/')
+  })
+
+  it('pede o código do aplicativo quando a conta tem login em duas etapas', async () => {
+    vi.spyOn(authApi, 'login').mockResolvedValue({ twoFactor: true })
+    const challenge = vi.spyOn(authApi, 'twoFactorChallenge').mockResolvedValue({ ...ana, two_factor_enabled: true })
+    const { wrapper, router } = await mountLogin()
+
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(router.currentRoute.value.path).toBe('/login')
+
+    await wrapper.get('#code').setValue('123 456')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(challenge).toHaveBeenCalledWith('123 456')
     expect(router.currentRoute.value.path).toBe('/')
   })
 })

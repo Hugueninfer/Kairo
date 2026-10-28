@@ -12,6 +12,7 @@
         "laravel/reverb": "^1.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
+        "pragmarx/google2fa": "^9.1",
         "prettus/l5-repository": "^4.0",
         "spatie/laravel-activitylog": "^4.12",
         "spatie/laravel-permission": "^7.0"

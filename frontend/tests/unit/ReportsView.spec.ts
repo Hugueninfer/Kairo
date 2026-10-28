@@ -14,6 +14,7 @@ const report: HoursReport = {
   generated_at: '2026-10-28T12:00:00Z',
   rows: [
     { key: 'p1', label: 'Site da padaria', minutes: 600, billable_minutes: 540, amount: '1350.00' },
+    { key: 'p3', label: '=HYPERLINK("http://mal.example")', minutes: 0, billable_minutes: 0, amount: '0.00' },
     { key: 'p2', label: 'App "Delivery"', minutes: 90, billable_minutes: 0, amount: '0.00' },
   ],
   totals: { minutes: 690, billable_minutes: 540, amount: '1350.00' },
@@ -79,6 +80,7 @@ describe('ReportsView', () => {
     expect(csv).toContain('"Projeto";"Horas";"Horas faturáveis";"Valor"')
     expect(csv).toContain('"Site da padaria";"10,00";"9,00";"1350,00"')
     expect(csv).toContain('"App ""Delivery""";"1,50";"0,00";"0,00"')
+    expect(csv).toContain(`"'=HYPERLINK(""http://mal.example"")"`)
     expect(csv).toContain('"Total";"11,50";"9,00";"1350,00"')
   })
 })

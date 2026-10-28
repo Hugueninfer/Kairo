@@ -20,8 +20,17 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function login(payload: LoginPayload): Promise<void> {
-    user.value = await authApi.login(payload)
+  /** Devolve true quando a conta pede o código do aplicativo (login em duas etapas). */
+  async function login(payload: LoginPayload): Promise<boolean> {
+    const result = await authApi.login(payload)
+    if ('twoFactor' in result) return true
+    user.value = result.user
+    loaded.value = true
+    return false
+  }
+
+  async function confirmLogin(code: string): Promise<void> {
+    user.value = await authApi.twoFactorChallenge(code)
     loaded.value = true
   }
 
@@ -40,5 +49,5 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { user, loaded, isAuthenticated, fetchUser, login, register, logout }
+  return { user, loaded, isAuthenticated, fetchUser, login, confirmLogin, register, logout }
 })

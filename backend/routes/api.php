@@ -4,6 +4,7 @@ use App\Enums\Permission;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
+use App\Http\Controllers\Api\V1\Auth\TwoFactorController;
 use App\Http\Controllers\Api\V1\Billing\InvoiceController;
 use App\Http\Controllers\Api\V1\Billing\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\Boards\BoardController;
@@ -35,12 +36,21 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::prefix('auth')->name('auth.')->group(function (): void {
         Route::post('register', [AuthController::class, 'register'])->middleware('throttle:auth')->name('register');
         Route::post('login', [AuthController::class, 'login'])->name('login');
+        Route::post('two-factor-challenge', [AuthController::class, 'twoFactorChallenge'])->middleware('throttle:auth')->name('two-factor.challenge');
         Route::post('forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:auth')->name('password.forgot');
         Route::post('reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:auth')->name('password.reset');
 
         Route::middleware('auth:sanctum')->group(function (): void {
             Route::get('me', [AuthController::class, 'me'])->name('me');
             Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+            Route::put('password', [AuthController::class, 'changePassword'])->middleware('throttle:auth')->name('password.change');
+
+            Route::prefix('two-factor')->name('two-factor.')->group(function (): void {
+                Route::post('/', [TwoFactorController::class, 'store'])->name('store');
+                Route::post('confirm', [TwoFactorController::class, 'confirm'])->name('confirm');
+                Route::post('recovery-codes', [TwoFactorController::class, 'recoveryCodes'])->name('recovery-codes');
+                Route::delete('/', [TwoFactorController::class, 'destroy'])->name('destroy');
+            });
             Route::post('email/verification-notification', [EmailVerificationController::class, 'resend'])
                 ->middleware('throttle:auth')
                 ->name('verification.send');
