@@ -8,10 +8,12 @@ use App\Http\Requests\Projects\ProjectRequest;
 use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use App\Services\Projects\ProjectService;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 
+#[Group('Projetos', weight: 7)]
 class ProjectController extends Controller
 {
     public function __construct(private readonly ProjectService $projects) {}

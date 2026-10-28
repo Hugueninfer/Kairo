@@ -38,6 +38,79 @@ jobs:
       - name: Testes (Pest)
         run: vendor/bin/pest
 
+  api-docs:
+    name: Documentação da API
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: kairo
+          POSTGRES_USER: kairo
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kairo -d kairo"
+          --health-interval 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, dom, gd, pdo_pgsql, redis
+          coverage: none
+
+      - name: Instalar dependências
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      # O Scramble lê as colunas do banco para descrever os models, então gera com o Postgres.
+      - name: Gerar o OpenAPI
+        env:
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan migrate --force
+          php artisan scramble:export
+
+      - name: Conferir se docs/openapi.json está em dia
+        run: git diff --exit-code ../docs/openapi.json || (echo "::error::docs/openapi.json está desatualizado. Rode 'php artisan scramble:export' no backend e faça commit." && exit 1)
+
+  docker:
+    name: Imagens Docker de produção
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar o compose de produção
+        run: |
+          cp .env.production.example .env.production
+          sed -i 's/^APP_KEY=$/APP_KEY=base64:ci/; s/^DB_PASSWORD=$/DB_PASSWORD=ci/; s/^REVERB_APP_KEY=$/REVERB_APP_KEY=ci/; s/^REVERB_APP_SECRET=$/REVERB_APP_SECRET=ci/' .env.production
+          docker compose -f compose.prod.yaml --env-file .env.production config --quiet
+
+      - name: Build da API
+        run: docker build -t kairo-api backend
+
+      - name: Build do front
+        run: docker build -t kairo-web --build-arg VITE_REVERB_APP_KEY=ci --build-arg VITE_REVERB_HOST=kairo.example.com frontend
+
+      - name: Validar o Caddyfile
+        run: docker run --rm -e APP_DOMAIN=kairo.example.com kairo-web caddy validate --config /etc/caddy/Caddyfile
+
+      - name: A API sobe e responde
+        run: |
+          docker run -d --name api -e APP_KEY=base64:$(openssl rand -base64 32) -e DB_CONNECTION=sqlite -e DB_DATABASE=/tmp/kairo.sqlite \
+            -e CACHE_STORE=array -e SESSION_DRIVER=array -e QUEUE_CONNECTION=sync -e RUN_MIGRATIONS=false -p 8000:8000 kairo-api
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/up && exit 0; sleep 2; done
+          docker logs api; exit 1
+
   frontend:
     name: Front-end (Vue)
     runs-on: ubuntu-latest

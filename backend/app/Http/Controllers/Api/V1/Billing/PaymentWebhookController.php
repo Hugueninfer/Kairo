@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Billing;
 
 use App\Http\Controllers\Controller;
 use App\Services\Billing\PaymentWebhookService;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
  * Avisos dos gateways de pagamento. Sem login: a autenticidade é conferida pelo adaptador
  * do gateway (token ou assinatura). Responde rápido; o processamento vai para a fila.
  */
+#[Group('Webhooks', weight: 18)]
 class PaymentWebhookController extends Controller
 {
     public function __construct(private readonly PaymentWebhookService $webhooks) {}

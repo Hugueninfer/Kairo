@@ -9,8 +9,10 @@ use App\Http\Requests\Quotes\ListContractsRequest;
 use App\Http\Resources\ContractResource;
 use App\Models\Contract;
 use App\Services\Quotes\ContractService;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+#[Group('Contratos', weight: 11)]
 class ContractController extends Controller
 {
     public function __construct(private readonly ContractService $contracts) {}

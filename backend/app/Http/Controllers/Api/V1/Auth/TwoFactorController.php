@@ -7,12 +7,14 @@ use App\Http\Requests\Auth\ConfirmPasswordRequest;
 use App\Http\Requests\Auth\TwoFactorCodeRequest;
 use App\Models\User;
 use App\Services\Auth\TwoFactorService;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
 /**
  * Liga, confirma e desliga o login em duas etapas de quem está logado.
  */
+#[Group('Autenticação', weight: 1)]
 class TwoFactorController extends Controller
 {
     public function __construct(private readonly TwoFactorService $twoFactor) {}

@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\BoardResource;
 use App\Models\Board;
 use App\Services\Boards\BoardService;
+use Dedoc\Scramble\Attributes\Group;
 
 /**
  * Liga e desliga o link de leitura do board para o cliente.
  */
+#[Group('Boards', weight: 13)]
 class BoardShareController extends Controller
 {
     public function __construct(private readonly BoardService $boards) {}

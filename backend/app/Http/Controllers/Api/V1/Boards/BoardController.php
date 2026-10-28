@@ -10,11 +10,13 @@ use App\Http\Resources\BoardResource;
 use App\Models\Board;
 use App\Models\User;
 use App\Services\Boards\BoardService;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 
+#[Group('Boards', weight: 13)]
 class BoardController extends Controller
 {
     public function __construct(private readonly BoardService $boards) {}

@@ -11,11 +11,13 @@ use App\Models\Invitation;
 use App\Models\User;
 use App\Services\Companies\InvitationService;
 use App\Support\TenantContext;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 
+#[Group('Equipe', weight: 3)]
 class InvitationController extends Controller
 {
     public function __construct(private readonly InvitationService $invitations) {}

@@ -74,6 +74,59 @@ As regras de camada são checadas por testes de arquitetura em `backend/tests/Ar
 - Papéis e permissões usam spatie/laravel-permission em modo teams, com `company_id` como time. Toda empresa nasce com os papéis Dono, Administrador, Financeiro e Membro.
 - O catálogo de permissões fica no enum `App\Enums\Permission`. As rotas exigem a permissão com `->can(...)`, e o dono da empresa passa em todas.
 
+## Documentação da API
+
+A documentação OpenAPI é gerada a partir do código (rotas, FormRequests e Resources) pelo [Scramble](https://scramble.dedoc.co):
+
+- Em desenvolvimento, com a API rodando: http://localhost:8000/docs/api (dá para testar as chamadas ali mesmo).
+- O arquivo [`docs/openapi.json`](docs/openapi.json) fica no repositório para quem quiser importar no Postman, Insomnia ou gerar um cliente.
+
+Depois de mudar rotas, validações ou Resources, gere o arquivo de novo (o CI avisa se ele ficar desatualizado):
+
+```bash
+cd backend
+php artisan scramble:export
+```
+
+## Publicando em produção
+
+O Kairo roda inteiro com Docker num servidor (uma VPS com 2 GB de RAM já serve). Os arquivos de produção:
+
+| Arquivo | O que faz |
+|---|---|
+| `compose.prod.yaml` | Sobe tudo: Caddy (porta de entrada com HTTPS), API, fila, agendador, Reverb, Postgres e Redis |
+| `backend/Dockerfile` | Imagem da API com FrankenPHP; a mesma imagem roda a fila, o agendador e o Reverb |
+| `frontend/Dockerfile` | Build do front servido pelo Caddy, que repassa `/api` para a API e o WebSocket para o Reverb |
+| `.env.production.example` | Variáveis que você precisa preencher |
+
+Passo a passo:
+
+1. Crie o servidor (Ubuntu 24.04, por exemplo), instale o Docker e libere as portas 80 e 443.
+2. Aponte o domínio (registro DNS tipo A) para o IP do servidor.
+3. No servidor, clone o repositório e prepare as variáveis:
+
+   ```bash
+   git clone https://github.com/Hugueninfer/Kairo.git && cd Kairo
+   cp .env.production.example .env.production
+   ```
+
+   Preencha `APP_DOMAIN`, `APP_KEY`, `DB_PASSWORD`, `REVERB_APP_KEY`, `REVERB_APP_SECRET` e o SMTP. Para gerar valores aleatórios: `openssl rand -hex 24` (e, para a `APP_KEY`, `echo "base64:$(openssl rand -base64 32)"`).
+4. Suba:
+
+   ```bash
+   docker compose -f compose.prod.yaml --env-file .env.production up -d --build
+   ```
+
+   Na primeira subida, a API roda as migrations e o Caddy emite o certificado HTTPS. Em alguns minutos o Kairo responde em `https://seu-dominio`.
+5. Para atualizar: `git pull` e o mesmo comando do passo 4.
+
+Dicas:
+
+- Logs: `docker compose -f compose.prod.yaml logs -f app queue`.
+- Backup do banco: `docker compose -f compose.prod.yaml exec postgres pg_dump -U kairo kairo > backup.sql`. Vale agendar isso e guardar fora do servidor.
+- Os PDFs e anexos ficam no volume `storage`; os dados do Postgres e do Redis também ficam em volumes, então sobrevivem às atualizações.
+- Os pagamentos continuam simulados (`PAYMENT_GATEWAY=fake`) até um gateway real ser ligado.
+
 ## Boards em tempo real
 
 - O WebSocket é o Laravel Reverb. Cada board tem um canal de presença `board.{ulid}`, autorizado em `POST /api/v1/company/broadcasting/auth` com a mesma sessão, CSRF e filtro de empresa das outras rotas: só entra quem é da empresa dona do board e tem `boards.view`.

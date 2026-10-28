@@ -9,9 +9,11 @@ use App\Models\User;
 use App\Services\Companies\MembershipService;
 use App\Services\Companies\RoleService;
 use App\Support\TenantContext;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
+#[Group('Equipe', weight: 3)]
 class MemberController extends Controller
 {
     public function __construct(private readonly MembershipService $memberships) {}

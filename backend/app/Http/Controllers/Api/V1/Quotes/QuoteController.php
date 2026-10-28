@@ -10,6 +10,7 @@ use App\Models\Quote;
 use App\Models\User;
 use App\Services\Quotes\QuoteService;
 use App\Support\Pdf\QuotePdf;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -17,6 +18,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+#[Group('Orçamentos', weight: 10)]
 class QuoteController extends Controller
 {
     public function __construct(private readonly QuoteService $quotes) {}

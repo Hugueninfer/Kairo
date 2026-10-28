@@ -7,10 +7,12 @@ use App\Http\Requests\Companies\BillingSettingsRequest;
 use App\Http\Resources\BillingSettingsResource;
 use App\Services\Companies\CompanyService;
 use App\Support\TenantContext;
+use Dedoc\Scramble\Attributes\Group;
 
 /**
  * Régua de lembretes de cobrança da empresa ativa.
  */
+#[Group('Faturas', weight: 12)]
 class BillingSettingsController extends Controller
 {
     public function __construct(

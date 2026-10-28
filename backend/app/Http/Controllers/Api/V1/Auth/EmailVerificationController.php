@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\Auth\EmailVerificationService;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
+#[Group('Autenticação', weight: 1)]
 class EmailVerificationController extends Controller
 {
     public function __construct(private readonly EmailVerificationService $verification) {}

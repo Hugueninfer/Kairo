@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Services\Auth\PasswordResetService;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 
+#[Group('Autenticação', weight: 1)]
 class PasswordResetController extends Controller
 {
     public function __construct(private readonly PasswordResetService $passwords) {}
