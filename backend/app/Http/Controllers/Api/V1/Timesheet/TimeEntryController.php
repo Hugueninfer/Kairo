@@ -12,6 +12,7 @@ use App\Models\TimeEntry;
 use App\Models\User;
 use App\Services\Timesheet\TimeEntryService;
 use App\Services\Timesheet\TimesheetService;
+use App\Support\Csv;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -51,7 +52,7 @@ class TimeEntryController extends Controller
             fwrite($out, "\xEF\xBB\xBF");
 
             foreach ($rows as $row) {
-                fputcsv($out, $row, ';', '"', '');
+                fputcsv($out, array_map(Csv::cell(...), $row), ';', '"', '');
             }
 
             fclose($out);

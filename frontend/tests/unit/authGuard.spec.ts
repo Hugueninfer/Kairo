@@ -26,7 +26,7 @@ describe('authGuard', () => {
 
   it('tira o usuário logado das telas de visitante', async () => {
     const auth = useAuthStore()
-    auth.user = { id: 1, name: 'Ana', email: 'a@k.test', email_verified: true, created_at: null }
+    auth.user = { id: 1, name: 'Ana', email: 'a@k.test', email_verified: true, two_factor_enabled: false, created_at: null }
     auth.loaded = true
 
     expect(await authGuard(routeTo('/login', { guestOnly: true }))).toEqual({ name: 'dashboard' })
@@ -34,7 +34,7 @@ describe('authGuard', () => {
 
   it('libera a rota protegida para quem está logado', async () => {
     const auth = useAuthStore()
-    auth.user = { id: 1, name: 'Ana', email: 'a@k.test', email_verified: true, created_at: null }
+    auth.user = { id: 1, name: 'Ana', email: 'a@k.test', email_verified: true, two_factor_enabled: false, created_at: null }
     auth.loaded = true
 
     expect(await authGuard(routeTo('/', { requiresAuth: true }))).toBe(true)
@@ -43,7 +43,7 @@ describe('authGuard', () => {
   it('manda para criar a primeira empresa quando não há empresa ativa', async () => {
     vi.spyOn(companiesApi, 'list').mockResolvedValue([])
     const auth = useAuthStore()
-    auth.user = { id: 1, name: 'Ana', email: 'a@k.test', email_verified: true, created_at: null }
+    auth.user = { id: 1, name: 'Ana', email: 'a@k.test', email_verified: true, two_factor_enabled: false, created_at: null }
     auth.loaded = true
 
     expect(await authGuard(routeTo('/', { requiresAuth: true, requiresCompany: true }))).toEqual({ name: 'company-create' })
@@ -64,7 +64,7 @@ describe('authGuard', () => {
     ])
     vi.spyOn(companiesApi, 'access').mockResolvedValue({ role: { id: 2, name: 'Membro' }, permissions: ['members.view'] })
     const auth = useAuthStore()
-    auth.user = { id: 1, name: 'Ana', email: 'a@k.test', email_verified: true, created_at: null }
+    auth.user = { id: 1, name: 'Ana', email: 'a@k.test', email_verified: true, two_factor_enabled: false, created_at: null }
     auth.loaded = true
     const meta = { requiresAuth: true, requiresCompany: true }
 

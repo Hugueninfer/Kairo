@@ -17,7 +17,7 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
@@ -30,6 +30,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public const PERMISSION_GUARD = 'web';
 
     protected string $guard_name = self::PERMISSION_GUARD;
+
+    /**
+     * Login em duas etapas ligado: o segredo existe e a pessoa já confirmou com um código.
+     */
+    public function hasTwoFactorEnabled(): bool
+    {
+        // Lê o valor cru: um usuário recém-criado em memória ainda não tem as colunas carregadas.
+        return ($this->attributes['two_factor_secret'] ?? null) !== null
+            && ($this->attributes['two_factor_confirmed_at'] ?? null) !== null;
+    }
 
     /**
      * @return BelongsToMany<Company, $this>
@@ -57,6 +67,10 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
+            'two_factor_confirmed_at' => 'datetime',
+            'two_factor_last_window' => 'integer',
         ];
     }
 

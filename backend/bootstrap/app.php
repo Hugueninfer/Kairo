@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -49,6 +50,16 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($e instanceof AuthenticationException) {
                 return response()->json(['message' => 'Você precisa estar autenticado.', 'code' => 'unauthenticated'], 401);
+            }
+
+            if ($e instanceof ThrottleRequestsException) {
+                $seconds = (int) ($e->getHeaders()['Retry-After'] ?? 60);
+
+                return response()->json(
+                    ['message' => "Muitas tentativas. Tente de novo em {$seconds} segundos.", 'code' => 'too_many_attempts'],
+                    429,
+                    $e->getHeaders(),
+                );
             }
 
             $status = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : null;

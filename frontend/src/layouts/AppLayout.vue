@@ -70,7 +70,7 @@ async function logout() {
             <option v-for="item in company.companies" :key="item.id" :value="item.id">{{ item.name }}</option>
             <option value="nova">+ Nova empresa</option>
           </select>
-          <span class="text-slate-600">{{ auth.user?.name }}</span>
+          <RouterLink to="/conta" class="text-slate-600 hover:text-brand-600" active-class="font-semibold text-brand-600" title="Minha conta">{{ auth.user?.name }}</RouterLink>
           <button type="button" class="font-medium text-slate-700 hover:text-brand-600" @click="logout">Sair</button>
         </div>
       </div>

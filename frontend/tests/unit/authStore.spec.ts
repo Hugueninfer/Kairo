@@ -4,7 +4,7 @@ import { authApi } from '@/services/auth'
 import { useAuthStore } from '@/stores/auth'
 import type { User } from '@/types/api'
 
-const user: User = { id: 1, name: 'Ana', email: 'ana@kairo.test', email_verified: true, created_at: null }
+const user: User = { id: 1, name: 'Ana', email: 'ana@kairo.test', email_verified: true, two_factor_enabled: false, created_at: null }
 
 describe('auth store', () => {
   beforeEach(() => {
@@ -13,7 +13,7 @@ describe('auth store', () => {
   })
 
   it('guarda o usuário depois do login', async () => {
-    vi.spyOn(authApi, 'login').mockResolvedValue(user)
+    vi.spyOn(authApi, 'login').mockResolvedValue({ user })
     const auth = useAuthStore()
 
     await auth.login({ email: 'ana@kairo.test', password: 'x' })

@@ -208,6 +208,22 @@ it('exporta CSV com separador ponto e vírgula', function () {
         ->and($csv)->toContain(';Site;;;1,50;Sim;100,00;150,00;');
 });
 
+it('neutraliza fórmulas no CSV para a planilha não executar texto digitado por alguém', function () {
+    [$owner, $company] = ownerWithCompany();
+    $project = Project::factory()->for($company)->create(['name' => '=HYPERLINK("http://mal.example")']);
+    TimeEntry::factory()->for($project)->create([
+        'user_id' => $owner->id, 'company_id' => $company->id, 'description' => '@SUM(1+1)',
+        'started_at' => '2026-10-27 12:00:00', 'ended_at' => '2026-10-27 13:30:00', 'duration_minutes' => 90,
+    ]);
+
+    $csv = fromSpa($this)->actingAs($owner, 'web')->get('/api/v1/company/time-entries/export?from=2026-10-26&to=2026-11-01')
+        ->streamedContent();
+
+    expect($csv)->toContain("'=HYPERLINK")
+        ->and($csv)->toContain("'@SUM(1+1)")
+        ->and($csv)->toContain(';1,50;');
+});
+
 it('o job para timers esquecidos no limite e avisa por e-mail', function () {
     Notification::fake();
     [$owner, $company] = ownerWithCompany();

@@ -51,7 +51,10 @@ vendor/bin/pest            # testes
 npm run type-check
 npm test
 npm run build
+npm run test:e2e           # ponta a ponta no Chromium (Playwright)
 ```
+
+Os testes ponta a ponta sobem sozinhos a API (porta 8001, com SQLite, fila síncrona e e-mails no log) e o front (porta 5174), sem precisar de Postgres nem Redis. Na primeira vez, instale o navegador com `npx playwright install chromium`.
 
 O GitHub Actions roda tudo isso em cada PR.
 
@@ -85,3 +88,13 @@ As regras de camada são checadas por testes de arquitetura em `backend/tests/Ar
 - O painel (`GET /api/v1/company/dashboard`) mostra só o que o papel permite: as horas da pessoa sempre; as da equipe com `timesheet.view_all`; recebido, a receber, vencido, a receita dos últimos 6 meses e os projetos perto de estourar o orçamento com `invoices.view`. Fica em cache por 60 segundos.
 - O relatório de horas (`GET /api/v1/company/reports/hours`, por projeto, pessoa ou cliente) é calculado na fila. Enquanto não fica pronto, a API responde `202` e o front pergunta de novo a cada segundo. O resultado fica em cache e é recalculado sozinho quando alguma hora muda. O CSV é gerado no navegador.
 - O histórico de alterações (`GET /api/v1/company/audit`, permissão `audit.view`) usa o spatie/laravel-activitylog: clientes, projetos, tarefas, orçamentos, contratos, faturas, pagamentos, boards, papéis e membros. Cada registro guarda a empresa, quem fez e os campos que mudaram. Registros com mais de um ano são apagados todo dia às 03:30 (`activitylog:clean`).
+
+## Segurança
+
+- Sessão do Sanctum em cookie HttpOnly com CSRF; nada de token no `localStorage`. CORS só para o `FRONTEND_URL`.
+- Isolamento entre empresas no middleware, no escopo global dos models e nos repositories, com teste de 404 entre empresas em cada recurso.
+- Limite de tentativas no login (5 por e-mail e IP), no código de duas etapas, no cadastro, na recuperação de senha e nos links públicos.
+- Login em duas etapas opcional (aplicativo autenticador, TOTP) na tela **Minha conta**, com 8 códigos de recuperação de uso único. O segredo fica criptografado no banco e um código não vale duas vezes.
+- Senhas com letras maiúsculas, minúsculas e números; em produção, senhas que já vazaram são recusadas.
+- Headers de segurança em todas as respostas da API (CSP, `X-Frame-Options`, `nosniff`, HSTS em HTTPS).
+- Os CSVs exportados neutralizam fórmulas (texto começando com `=`, `+`, `-` ou `@`), para a planilha não executar o que alguém digitou.

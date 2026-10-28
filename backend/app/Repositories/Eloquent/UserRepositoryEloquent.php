@@ -62,4 +62,32 @@ class UserRepositoryEloquent extends BaseRepository implements UserRepository
         $user->forceFill(['current_company_id' => $company?->id])->save();
         $user->setRelation('currentCompany', $company);
     }
+
+    public function setTwoFactorSecret(User $user, ?string $secret): void
+    {
+        $user->forceFill([
+            'two_factor_secret' => $secret,
+            'two_factor_recovery_codes' => null,
+            'two_factor_confirmed_at' => null,
+            'two_factor_last_window' => null,
+        ])->save();
+    }
+
+    public function confirmTwoFactor(User $user, array $hashedRecoveryCodes): void
+    {
+        $user->forceFill([
+            'two_factor_recovery_codes' => $hashedRecoveryCodes,
+            'two_factor_confirmed_at' => now(),
+        ])->save();
+    }
+
+    public function setRecoveryCodes(User $user, array $hashedRecoveryCodes): void
+    {
+        $user->forceFill(['two_factor_recovery_codes' => $hashedRecoveryCodes])->save();
+    }
+
+    public function setTwoFactorWindow(User $user, int $window): void
+    {
+        $user->forceFill(['two_factor_last_window' => $window])->save();
+    }
 }
