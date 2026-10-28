@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\AuditSubject;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\LogsCompanyActivity;
 use Database\Factories\BoardFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -23,7 +25,7 @@ use Illuminate\Support\Carbon;
 class Board extends Model
 {
     /** @use HasFactory<BoardFactory> */
-    use BelongsToCompany, HasFactory, HasUlids;
+    use BelongsToCompany, HasFactory, HasUlids, LogsCompanyActivity;
 
     /**
      * @return list<string>
@@ -76,5 +78,23 @@ class Board extends Model
     public function versions(): HasMany
     {
         return $this->hasMany(BoardVersion::class);
+    }
+
+    public static function auditSubject(): AuditSubject
+    {
+        return AuditSubject::Board;
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function auditedAttributes(): array
+    {
+        return ['title', 'shared_at'];
+    }
+
+    public function auditLabel(): string
+    {
+        return $this->title;
     }
 }

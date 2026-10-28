@@ -15,3 +15,6 @@ Schedule::job(new MarkOverdueInvoices)->dailyAt('03:20')->onOneServer();
 // Horários em UTC: 06h e 09h em Brasília.
 Schedule::job(new GenerateRecurringInvoices)->dailyAt('09:00')->onOneServer();
 Schedule::job(new SendInvoiceReminders)->dailyAt('12:00')->onOneServer();
+
+// Histórico de alterações com mais de um ano é apagado (config activitylog.delete_records_older_than_days).
+Schedule::command('activitylog:clean --force')->dailyAt('03:30')->onOneServer();

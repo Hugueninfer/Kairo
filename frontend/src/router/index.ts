@@ -106,6 +106,18 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresCompany: true, permission: 'boards.view' },
   },
   {
+    path: '/relatorios',
+    name: 'reports',
+    component: () => import('@/views/reports/ReportsView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'reports.view' },
+  },
+  {
+    path: '/historico',
+    name: 'audit',
+    component: () => import('@/views/reports/AuditView.vue'),
+    meta: { requiresAuth: true, requiresCompany: true, permission: 'audit.view' },
+  },
+  {
     // Board compartilhado com o cliente: público e só leitura, a API confere o link.
     path: '/b/:token',
     name: 'public-board',

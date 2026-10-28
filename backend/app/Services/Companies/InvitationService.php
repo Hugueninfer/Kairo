@@ -2,6 +2,7 @@
 
 namespace App\Services\Companies;
 
+use App\Enums\AuditSubject;
 use App\Exceptions\Companies\AlreadyMemberException;
 use App\Exceptions\Companies\InvalidInvitationException;
 use App\Exceptions\Companies\InvitationEmailMismatchException;
@@ -12,6 +13,7 @@ use App\Notifications\Companies\InvitationNotification;
 use App\Repositories\Contracts\CompanyRepository;
 use App\Repositories\Contracts\InvitationRepository;
 use App\Repositories\Contracts\UserRepository;
+use App\Services\Audit\AuditService;
 use App\Support\Transactions\TransactionManager;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;
@@ -25,6 +27,7 @@ class InvitationService
         private readonly UserRepository $users,
         private readonly RoleService $roles,
         private readonly TransactionManager $transaction,
+        private readonly AuditService $audit,
     ) {}
 
     /**
@@ -97,6 +100,8 @@ class InvitationService
             $this->invitations->markAccepted($invitation);
             $this->users->setCurrentCompany($user, $company);
         });
+
+        $this->audit->record($company->id, AuditSubject::Member, 'joined', $user->name, new: ['role' => $this->roles->roleOf($user, $company)?->name]);
 
         return $company;
     }

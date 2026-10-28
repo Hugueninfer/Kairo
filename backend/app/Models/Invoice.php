@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\AuditSubject;
 use App\Enums\InvoiceStatus;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\LogsCompanyActivity;
 use Database\Factories\InvoiceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -34,7 +36,7 @@ use Illuminate\Support\Carbon;
 class Invoice extends Model
 {
     /** @use HasFactory<InvoiceFactory> */
-    use BelongsToCompany, HasFactory, HasUlids;
+    use BelongsToCompany, HasFactory, HasUlids, LogsCompanyActivity;
 
     /**
      * @return list<string>
@@ -131,5 +133,23 @@ class Invoice extends Model
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TimeEntry::class);
+    }
+
+    public static function auditSubject(): AuditSubject
+    {
+        return AuditSubject::Invoice;
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function auditedAttributes(): array
+    {
+        return ['number', 'status', 'due_date', 'total', 'amount_paid'];
+    }
+
+    public function auditLabel(): string
+    {
+        return $this->number;
     }
 }

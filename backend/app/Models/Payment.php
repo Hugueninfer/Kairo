@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\AuditSubject;
 use App\Enums\PaymentMethod;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\LogsCompanyActivity;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +22,7 @@ use Illuminate\Support\Carbon;
 #[Fillable(['company_id', 'invoice_id', 'gateway', 'gateway_payment_id', 'method', 'amount', 'paid_at', 'recorded_by'])]
 class Payment extends Model
 {
-    use BelongsToCompany, HasUlids;
+    use BelongsToCompany, HasUlids, LogsCompanyActivity;
 
     /**
      * @return list<string>
@@ -56,5 +58,23 @@ class Payment extends Model
     public function recorder(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recorded_by');
+    }
+
+    public static function auditSubject(): AuditSubject
+    {
+        return AuditSubject::Payment;
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function auditedAttributes(): array
+    {
+        return ['amount', 'method', 'paid_at'];
+    }
+
+    public function auditLabel(): string
+    {
+        return 'da fatura '.($this->invoice()->withoutGlobalScope('company')->value('number') ?? '');
     }
 }

@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\AuditSubject;
 use App\Enums\ContractStatus;
 use App\Enums\RecurrenceFrequency;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\LogsCompanyActivity;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -30,7 +32,7 @@ use Illuminate\Support\Carbon;
 ])]
 class Contract extends Model
 {
-    use BelongsToCompany, HasUlids;
+    use BelongsToCompany, HasUlids, LogsCompanyActivity;
 
     /**
      * @return list<string>
@@ -85,5 +87,23 @@ class Contract extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public static function auditSubject(): AuditSubject
+    {
+        return AuditSubject::Contract;
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function auditedAttributes(): array
+    {
+        return ['title', 'status', 'total', 'billing_frequency', 'recurring_amount', 'next_billing_on'];
+    }
+
+    public function auditLabel(): string
+    {
+        return trim($this->number.' '.$this->title);
     }
 }

@@ -148,6 +148,7 @@ export interface Options {
   payment_methods: Option<PaymentMethod>[]
   recurrence_frequencies: Option<RecurrenceFrequency>[]
   reminder_stages: Option<ReminderStage>[]
+  audit_subjects: Option<AuditSubject>[]
 }
 
 export type TimeEntryStatus = 'pending' | 'approved' | 'rejected'
@@ -377,4 +378,54 @@ export interface PublicBoard {
   company: { name: string }
   updated_at: string
   elements: BoardElement[]
+}
+
+export type AuditSubject = 'client' | 'project' | 'task' | 'quote' | 'contract' | 'invoice' | 'payment' | 'board' | 'role' | 'member'
+
+/** Uma linha do histórico: "{causer} {summary}" e os campos alterados. */
+export interface AuditEntry {
+  id: number
+  created_at: string
+  subject: { value: AuditSubject; label: string } | null
+  causer: { id: number; name: string } | null
+  summary: string
+  changes: { field: string; label: string; old: string | null; new: string | null }[]
+}
+
+export interface MinutesSummary {
+  total: number
+  billable: number
+}
+
+export interface Dashboard {
+  month: string
+  hours: { mine: MinutesSummary; team: MinutesSummary | null }
+  finance: {
+    received_this_month: string
+    open_count: number
+    open_total: string
+    overdue_count: number
+    overdue_total: string
+    revenue: { month: string; label: string; total: string }[]
+  } | null
+  projects_over_budget: { id: string; name: string; budget: string; consumed: string; percent: number }[] | null
+}
+
+export type ReportGroup = 'project' | 'member' | 'client'
+
+export interface HoursReportRow {
+  key: string
+  label: string
+  minutes: number
+  billable_minutes: number
+  amount: string
+}
+
+export interface HoursReport {
+  from: string
+  to: string
+  group: ReportGroup
+  generated_at: string
+  rows: HoursReportRow[]
+  totals: { minutes: number; billable_minutes: number; amount: string }
 }
