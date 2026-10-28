@@ -46,7 +46,7 @@ async function copy() {
 <template>
   <BaseModal title="Compartilhar com o cliente" @close="emit('close')">
     <div class="space-y-4">
-      <p class="text-sm text-slate-600">
+      <p class="text-sm text-fg-muted">
         Quem tiver o link vê o board sem precisar de conta, só para leitura. Ninguém consegue editar por ele, e você pode desligar quando quiser.
       </p>
       <FormAlert :message="error" />
@@ -56,15 +56,15 @@ async function copy() {
             :value="board.share_url"
             readonly
             aria-label="Link de leitura"
-            class="min-w-0 flex-1 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm"
+            class="field min-w-0 flex-1 bg-surface-2"
             data-test="share-url"
             @focus="($event.target as HTMLInputElement).select()"
           />
-          <button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50" @click="copy">
+          <button type="button" class="btn-secondary" @click="copy">
             {{ copied ? 'Copiado' : 'Copiar' }}
           </button>
         </div>
-        <button type="button" class="w-full text-sm text-red-600 hover:underline" :disabled="busy" data-test="share-off" @click="turnOff">
+        <button type="button" class="w-full text-sm text-red-400 hover:underline" :disabled="busy" data-test="share-off" @click="turnOff">
           Desligar link
         </button>
       </template>

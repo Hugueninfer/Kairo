@@ -11,7 +11,7 @@ import {
   Text as VText,
   Transformer as VTransformer,
 } from 'vue-konva'
-import { BOARD_COLORS, STROKE_COLORS, newArrow, newElement, type BoardDocument } from '@/composables/boardDocument'
+import { BOARD_COLORS, STROKE_COLORS, inkOnDark, newArrow, newElement, type BoardDocument } from '@/composables/boardDocument'
 import type { RemoteCursor } from '@/composables/useBoardRealtime'
 import type { BoardElement, BoardElementType } from '@/types/api'
 
@@ -289,7 +289,7 @@ function textConfig(element: BoardElement, centered: boolean) {
 }
 
 function arrowConfig(element: BoardElement) {
-  const color = element.props.stroke ?? '#334155'
+  const color = inkOnDark(element.props.stroke ?? '#334155')
   return {
     id: element.id,
     points: element.props.points ?? [0, 0, 0, 0],
@@ -328,13 +328,13 @@ defineExpose({ fit })
 <template>
   <div class="flex h-full flex-col gap-2">
     <div class="flex flex-wrap items-center gap-2 text-sm">
-      <div v-if="editable" class="flex overflow-hidden rounded-lg border border-slate-300 bg-white" role="toolbar" aria-label="Ferramentas">
+      <div v-if="editable" class="flex overflow-hidden rounded-lg border border-line-strong bg-surface" role="toolbar" aria-label="Ferramentas">
         <button
           v-for="item in tools"
           :key="item.value"
           type="button"
-          class="border-r border-slate-200 px-3 py-1.5 last:border-r-0 hover:bg-slate-50"
-          :class="tool === item.value ? 'bg-brand-50 font-semibold text-brand-700' : ''"
+          class="border-r border-line px-3 py-1.5 last:border-r-0 hover:bg-surface-2"
+          :class="tool === item.value ? 'bg-brand-500/10 font-semibold text-brand-300' : ''"
           :title="`${item.label} (${item.key.toUpperCase()})`"
           :aria-pressed="tool === item.value"
           :data-tool="item.value"
@@ -344,35 +344,35 @@ defineExpose({ fit })
         </button>
       </div>
 
-      <div v-if="editable && selected" class="flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2 py-1" data-test="selection-tools">
+      <div v-if="editable && selected" class="flex items-center gap-1 rounded-lg border border-line-strong bg-surface px-2 py-1" data-test="selection-tools">
         <button
           v-for="color in selected.type === 'arrow' || selected.type === 'text' ? STROKE_COLORS : BOARD_COLORS"
           :key="color"
           type="button"
-          class="h-5 w-5 rounded-full ring-1 ring-slate-300"
-          :style="{ background: color }"
+          class="h-5 w-5 rounded-full ring-1 ring-line-strong"
+          :style="{ background: selected.type === 'arrow' || selected.type === 'text' ? inkOnDark(color) : color }"
           :aria-label="`Cor ${color}`"
           @click="setColor(color)"
         />
-        <button type="button" class="ml-2 px-1 text-slate-600 hover:text-brand-600" @click="bringToFront">Trazer para frente</button>
-        <button type="button" class="px-1 text-red-600 hover:underline" data-test="delete-element" @click="removeSelected">Apagar</button>
+        <button type="button" class="ml-2 px-1 text-fg-muted hover:text-brand-300" @click="bringToFront">Trazer para frente</button>
+        <button type="button" class="px-1 text-red-400 hover:underline" data-test="delete-element" @click="removeSelected">Apagar</button>
       </div>
 
-      <span v-if="hint" class="text-slate-500" data-test="hint">{{ hint }}</span>
+      <span v-if="hint" class="text-fg-muted" data-test="hint">{{ hint }}</span>
 
-      <div class="ml-auto flex items-center overflow-hidden rounded-lg border border-slate-300 bg-white">
-        <button type="button" class="px-3 py-1.5 hover:bg-slate-50" aria-label="Diminuir zoom" @click="zoomBy(1 / 1.2)">−</button>
+      <div class="ml-auto flex items-center overflow-hidden rounded-lg border border-line-strong bg-surface">
+        <button type="button" class="px-3 py-1.5 hover:bg-surface-2" aria-label="Diminuir zoom" @click="zoomBy(1 / 1.2)">−</button>
         <span class="w-14 text-center tabular-nums" data-test="zoom">{{ Math.round(view.scale * 100) }}%</span>
-        <button type="button" class="px-3 py-1.5 hover:bg-slate-50" aria-label="Aumentar zoom" @click="zoomBy(1.2)">+</button>
-        <button type="button" class="border-l border-slate-200 px-3 py-1.5 hover:bg-slate-50" @click="fit">Ajustar</button>
+        <button type="button" class="px-3 py-1.5 hover:bg-surface-2" aria-label="Aumentar zoom" @click="zoomBy(1.2)">+</button>
+        <button type="button" class="border-l border-line px-3 py-1.5 hover:bg-surface-2" @click="fit">Ajustar</button>
       </div>
     </div>
 
     <div
       ref="container"
-      class="relative min-h-0 flex-1 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"
+      class="card relative min-h-0 flex-1 overflow-hidden"
       :class="tool === 'select' ? 'cursor-default' : 'cursor-crosshair'"
-      style="background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px"
+      style="background-color: var(--color-canvas); background-image: radial-gradient(rgb(255 255 255 / 0.1) 1px, transparent 1px); background-size: 24px 24px"
       data-test="board-canvas"
       @mouseleave="emit('pointer', null)"
     >
@@ -407,11 +407,11 @@ defineExpose({ fit })
                     height: element.height,
                     fill: elementColor(element),
                     cornerRadius: 4,
-                    shadowColor: '#0f172a',
+                    shadowColor: '#000000',
                     shadowOpacity: 0.18,
                     shadowBlur: 10,
                     shadowOffsetY: 3,
-                    stroke: arrowFrom === element.id ? '#2563EB' : undefined,
+                    stroke: arrowFrom === element.id ? '#2A7BFF' : undefined,
                     strokeWidth: 3,
                   }"
                 />
@@ -423,7 +423,7 @@ defineExpose({ fit })
                     width: element.width,
                     height: element.height,
                     fill: elementColor(element),
-                    stroke: arrowFrom === element.id ? '#2563EB' : (element.props.stroke ?? '#1D4ED8'),
+                    stroke: arrowFrom === element.id ? '#2A7BFF' : (element.props.stroke ?? '#1D4ED8'),
                     strokeWidth: arrowFrom === element.id ? 4 : 2,
                     cornerRadius: 8,
                   }"
@@ -438,7 +438,7 @@ defineExpose({ fit })
                     radiusX: element.width / 2,
                     radiusY: element.height / 2,
                     fill: elementColor(element),
-                    stroke: arrowFrom === element.id ? '#2563EB' : (element.props.stroke ?? '#15803D'),
+                    stroke: arrowFrom === element.id ? '#2A7BFF' : (element.props.stroke ?? '#15803D'),
                     strokeWidth: arrowFrom === element.id ? 4 : 2,
                   }"
                 />
@@ -452,13 +452,13 @@ defineExpose({ fit })
                   fontSize: element.props.font_size ?? 24,
                   fontFamily: FONT,
                   fontStyle: '600',
-                  fill: element.props.fill ?? '#0F172A',
+                  fill: inkOnDark(element.props.fill ?? '#0F172A'),
                   wrap: 'word',
                 }"
               />
             </VGroup>
           </template>
-          <VTransformer ref="transformerRef" :config="{ rotateEnabled: true, ignoreStroke: true, anchorSize: 9, borderStroke: '#2563EB', anchorStroke: '#2563EB' }" />
+          <VTransformer ref="transformerRef" :config="{ rotateEnabled: true, ignoreStroke: true, anchorSize: 9, borderStroke: '#2A7BFF', anchorStroke: '#2A7BFF' }" />
         </VLayer>
       </VStage>
 
@@ -466,7 +466,7 @@ defineExpose({ fit })
         v-if="editing"
         ref="editor"
         v-model="editing.text"
-        class="absolute resize-none border-0 bg-transparent leading-tight text-slate-800 outline-none ring-2 ring-brand-400"
+        class="absolute resize-none border-0 bg-transparent leading-tight text-fg outline-none ring-2 ring-brand-500"
         :style="editorStyle"
         aria-label="Texto do elemento"
         data-test="element-editor"
@@ -489,7 +489,7 @@ defineExpose({ fit })
         </span>
       </div>
 
-      <p v-if="doc.elements.size === 0 && editable" class="pointer-events-none absolute inset-x-0 top-1/3 text-center text-sm text-slate-400">
+      <p v-if="doc.elements.size === 0 && editable" class="pointer-events-none absolute inset-x-0 top-1/3 text-center text-sm text-fg-subtle">
         Board vazio. Escolha Nota, Retângulo ou Texto na barra e clique aqui para começar.
       </p>
     </div>

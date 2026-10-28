@@ -52,15 +52,15 @@ onMounted(loadOptions)
 <template>
   <BaseModal title="Cobrança recorrente" @close="emit('close')">
     <form class="space-y-4" novalidate @submit.prevent="submit">
-      <p class="text-sm text-slate-600">
+      <p class="text-sm text-fg-muted">
         {{ contract.number }} · {{ contract.title }} ({{ formatMoney(contract.total) }}). No dia de cada cobrança o Kairo gera a fatura e, se você deixar
         marcado, já envia ao cliente com o link de pagamento.
       </p>
       <FormAlert v-if="Object.keys(save.fieldErrors.value).length === 0" :message="save.message.value" />
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label for="recurrence-frequency" class="mb-1 block text-sm font-medium text-slate-700">Frequência</label>
-          <select id="recurrence-frequency" v-model="form.frequency" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <label for="recurrence-frequency" class="field-label">Frequência</label>
+          <select id="recurrence-frequency" v-model="form.frequency" class="field w-full">
             <option v-for="option in options?.recurrence_frequencies ?? []" :key="option.value" :value="option.value">{{ option.label }}</option>
           </select>
         </div>
@@ -76,12 +76,12 @@ onMounted(loadOptions)
         />
       </div>
       <label class="flex items-center gap-2 text-sm">
-        <input v-model="form.auto_send" type="checkbox" class="rounded border-slate-300" data-test="auto-send" />
+        <input v-model="form.auto_send" type="checkbox" class="h-4 w-4 rounded" data-test="auto-send" />
         Enviar ao cliente automaticamente
       </label>
-      <p v-if="!form.auto_send" class="text-xs text-slate-500">A fatura fica em rascunho para você revisar e enviar.</p>
+      <p v-if="!form.auto_send" class="text-xs text-fg-muted">A fatura fica em rascunho para você revisar e enviar.</p>
       <BaseButton :loading="save.submitting.value">{{ contract.recurrence ? 'Salvar' : 'Ligar cobrança recorrente' }}</BaseButton>
-      <button v-if="contract.recurrence" type="button" class="w-full text-sm text-red-600 hover:underline" data-test="turn-off" @click="turnOff">
+      <button v-if="contract.recurrence" type="button" class="w-full text-sm text-red-400 hover:underline" data-test="turn-off" @click="turnOff">
         Desligar cobrança recorrente
       </button>
     </form>

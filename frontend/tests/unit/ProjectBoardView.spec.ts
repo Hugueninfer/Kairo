@@ -82,7 +82,7 @@ describe('ProjectBoardView', () => {
     expect(todo[0]).toContain('Tarefa a')
     expect(todo[1]).toContain('Tarefa b')
     expect(wrapper.get('[data-test="column-done"]').findAll('[data-card]')).toHaveLength(1)
-    expect(wrapper.text()).toContain('+ Adicionar tarefa')
+    expect(wrapper.text()).toContain('Adicionar tarefa')
   })
 
   it('sem permissão de tarefas, não deixa arrastar nem criar', async () => {

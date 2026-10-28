@@ -42,7 +42,7 @@ async function onSubmit() {
         autocomplete="new-password"
         :error="fieldErrors.password"
       />
-      <p class="-mt-2 text-xs text-slate-500">Mínimo de 8 caracteres, com maiúscula, minúscula e número.</p>
+      <p class="-mt-2 text-xs text-fg-muted">Mínimo de 8 caracteres, com maiúscula, minúscula e número.</p>
       <BaseInput
         id="password_confirmation"
         v-model="form.password_confirmation"
@@ -55,7 +55,7 @@ async function onSubmit() {
 
     <template #footer>
       Já tem conta?
-      <RouterLink :to="{ name: 'login', query: route.query }" class="font-medium text-brand-600 hover:underline">Entrar</RouterLink>
+      <RouterLink :to="{ name: 'login', query: route.query }" class="link">Entrar</RouterLink>
     </template>
   </AuthLayout>
 </template>

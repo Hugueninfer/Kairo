@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { useApiForm } from '@/composables/useApiForm'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { boardsApi } from '@/services/boards'
@@ -71,38 +74,46 @@ onMounted(load)
 
 <template>
   <AppLayout wide>
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-2xl font-semibold">Boards</h1>
-      <div class="flex gap-2">
-        <input v-model="search" type="search" placeholder="Buscar board" aria-label="Buscar board" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-        <button v-if="canManage" type="button" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700" @click="openCreate">
-          Novo board
-        </button>
-      </div>
-    </div>
+    <PageHeader title="Boards" subtitle="Quadros livres para rascunhar ideias, mapas do site e fluxos com o cliente." :breadcrumbs="[{ label: 'Geral' }, { label: 'Boards' }]">
+      <template #actions>
+        <div class="relative w-full sm:w-60">
+          <AppIcon name="search" :size="16" class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-subtle" />
+          <input v-model="search" type="search" placeholder="Buscar board" aria-label="Buscar board" class="field w-full pl-9" />
+        </div>
+        <button v-if="canManage" type="button" class="btn-primary" data-test="new-board" @click="openCreate"><AppIcon name="plus" :size="16" />Novo board</button>
+      </template>
+    </PageHeader>
 
     <FormAlert :message="error" />
 
-    <p v-if="page && page.data.length === 0" class="rounded-2xl bg-white p-6 text-sm text-slate-500 shadow-sm ring-1 ring-slate-200">
-      Nenhum board ainda. Use um board para rascunhar ideias, mapas do site e fluxos com o cliente.
-    </p>
-    <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-test="boards">
-      <li v-for="board in page?.data ?? []" :key="board.id" class="group relative rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 hover:ring-brand-300">
-        <RouterLink :to="{ name: 'board', params: { id: board.id } }" class="block p-5">
-          <div class="mb-3 h-24 rounded-lg bg-slate-50" style="background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 14px 14px" />
-          <p class="font-semibold">{{ board.title }}</p>
-          <p class="text-xs text-slate-500">
-            {{ board.project?.name ?? 'Sem projeto' }} · {{ board.elements_count ?? 0 }} {{ board.elements_count === 1 ? 'elemento' : 'elementos' }}
-          </p>
-          <p class="text-xs text-slate-400">Alterado em {{ updated(board.updated_at) }}</p>
+    <div v-if="page && page.data.length === 0" class="card">
+      <EmptyState icon="board" title="Nenhum board ainda." description="Use um board para rascunhar ideias, mapas do site e fluxos com o cliente." />
+    </div>
+    <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4" data-test="boards">
+      <li v-for="board in page?.data ?? []" :key="board.id" class="card group relative overflow-hidden transition-colors hover:border-line-strong">
+        <RouterLink :to="{ name: 'board', params: { id: board.id } }" class="block">
+          <div class="relative h-32 border-b border-line bg-canvas" style="background-image: radial-gradient(rgb(255 255 255 / 0.09) 1px, transparent 1px); background-size: 14px 14px">
+            <span class="absolute top-6 left-8 h-10 w-14 -rotate-3 rounded bg-amber-300/80" />
+            <span class="absolute top-10 left-28 h-12 w-20 rounded-lg border-2 border-brand-500/70" />
+            <span class="absolute top-16 right-10 h-8 w-8 rounded-full border-2 border-emerald-500/70" />
+          </div>
+          <div class="p-4">
+            <p class="truncate font-semibold text-fg">{{ board.title }}</p>
+            <p class="mt-0.5 truncate text-xs text-fg-muted">
+              {{ board.project?.name ?? 'Sem projeto' }} · {{ board.elements_count ?? 0 }} {{ board.elements_count === 1 ? 'elemento' : 'elementos' }}
+            </p>
+            <p class="mt-2 text-xs text-fg-subtle">Alterado em {{ updated(board.updated_at) }}</p>
+          </div>
         </RouterLink>
         <button
           v-if="canManage"
           type="button"
-          class="absolute right-4 top-4 hidden rounded bg-white/90 px-2 py-0.5 text-xs text-red-600 shadow group-hover:block"
+          class="absolute top-3 right-3 rounded-lg border border-line bg-surface/90 p-1.5 text-fg-muted opacity-0 backdrop-blur transition group-hover:opacity-100 hover:text-red-300 focus:opacity-100"
+          :aria-label="`Apagar ${board.title}`"
+          title="Apagar"
           @click="remove(board)"
         >
-          Apagar
+          <AppIcon name="trash" :size="15" />
         </button>
       </li>
     </ul>
@@ -112,8 +123,8 @@ onMounted(load)
         <FormAlert v-if="Object.keys(save.fieldErrors.value).length === 0" :message="save.message.value" />
         <BaseInput id="board-title" v-model="form.title" label="Nome" :error="save.fieldErrors.value.title" />
         <div>
-          <label for="board-project" class="mb-1 block text-sm font-medium text-slate-700">Projeto (opcional)</label>
-          <select id="board-project" v-model="form.project_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <label for="board-project" class="field-label">Projeto (opcional)</label>
+          <select id="board-project" v-model="form.project_id" class="field w-full">
             <option value="">Sem projeto</option>
             <option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option>
           </select>

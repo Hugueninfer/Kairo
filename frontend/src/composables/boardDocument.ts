@@ -21,6 +21,25 @@ export const BOARD_COLORS = ['#FEF08A', '#FBCFE8', '#BFDBFE', '#BBF7D0', '#FED7A
 export const STROKE_COLORS = ['#334155', '#B91C1C', '#1D4ED8', '#15803D', '#C2410C', '#7C3AED'] as const
 
 /**
+ * O canvas é escuro, então setas e textos soltos aparecem numa versão clara da cor guardada.
+ * Só muda a exibição: o documento continua com a cor original (e o PDF/link público também).
+ */
+const INK_ON_DARK: Record<string, string> = {
+  '#0F172A': '#F4F4F5',
+  '#1E293B': '#E4E4E7',
+  '#334155': '#D4D4D8',
+  '#B91C1C': '#F87171',
+  '#1D4ED8': '#60A5FA',
+  '#15803D': '#4ADE80',
+  '#C2410C': '#FB923C',
+  '#7C3AED': '#A78BFA',
+}
+
+export function inkOnDark(color: string): string {
+  return INK_ON_DARK[color.toUpperCase()] ?? color
+}
+
+/**
  * Elemento novo com tamanho e cores padrão, centralizado no ponto clicado.
  */
 export function newElement(type: Exclude<BoardElementType, 'arrow'>, x: number, y: number, zIndex: number): BoardElement {

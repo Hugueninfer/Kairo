@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, toRef, watch } from 'vue'
 import TimeEntryModal from '@/components/timesheet/TimeEntryModal.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import StatCard from '@/components/ui/StatCard.vue'
+import StatusBadge from '@/components/ui/StatusBadge.vue'
+import { statusTone } from '@/composables/statusTone'
 import { useProjectPicker } from '@/composables/useProjectPicker'
 import { addDays, formatMinutes, isoDate } from '@/composables/time'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -111,139 +117,131 @@ onMounted(async () => {
 
 <template>
   <AppLayout wide>
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-2xl font-semibold">Planilha de horas</h1>
-      <div class="flex flex-wrap items-center gap-3 text-sm">
-        <select v-if="canViewAll" v-model="viewing" aria-label="De quem" class="rounded-lg border border-slate-300 px-2 py-1" data-test="who">
+    <PageHeader title="Planilha de horas" subtitle="Seu tempo da semana, por projeto e por dia." :breadcrumbs="[{ label: 'Geral' }, { label: 'Horas' }]">
+      <template #actions>
+        <select v-if="canViewAll" v-model="viewing" aria-label="De quem" class="field field-sm w-48" data-test="who">
           <option value="me">Minhas horas</option>
           <option value="all">Toda a equipe</option>
           <option v-for="member in members.filter((m) => m.id !== auth.user?.id)" :key="member.id" :value="member.id">{{ member.name }}</option>
         </select>
-        <a :href="exportUrl" class="text-brand-600 hover:underline" data-test="export">Exportar CSV</a>
-        <div v-if="isMine" class="w-36">
-          <BaseButton type="button" @click="modal = { entry: null }">Lançar horas</BaseButton>
-        </div>
-      </div>
-    </div>
+        <a :href="exportUrl" class="btn-secondary" data-test="export"><AppIcon name="download" :size="16" />Exportar CSV</a>
+        <BaseButton v-if="isMine" type="button" inline @click="modal = { entry: null }"><AppIcon name="plus" :size="16" />Lançar horas</BaseButton>
+      </template>
+    </PageHeader>
 
-    <form v-if="isMine && !timer.running" class="flex flex-wrap items-end gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200" @submit.prevent="startTimer">
+    <form v-if="isMine && !timer.running" class="card flex flex-wrap items-end gap-3 p-4" @submit.prevent="startTimer">
       <div class="min-w-48 flex-1">
-        <label for="timer-project" class="mb-1 block text-xs font-medium text-slate-600">Projeto</label>
-        <select id="timer-project" v-model="timerForm.project_id" class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm" @change="timerForm.task_id = ''">
+        <label for="timer-project" class="field-label">Projeto</label>
+        <select id="timer-project" v-model="timerForm.project_id" class="field field-sm w-full" @change="timerForm.task_id = ''">
           <option value="" disabled>Escolha</option>
           <option v-for="project in picker.projects.value" :key="project.id" :value="project.id">{{ project.name }}</option>
         </select>
       </div>
       <div class="min-w-48 flex-1">
-        <label for="timer-task" class="mb-1 block text-xs font-medium text-slate-600">Tarefa</label>
-        <select id="timer-task" v-model="timerForm.task_id" class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm">
+        <label for="timer-task" class="field-label">Tarefa</label>
+        <select id="timer-task" v-model="timerForm.task_id" class="field field-sm w-full">
           <option value="">Sem tarefa</option>
           <option v-for="task in picker.tasks.value" :key="task.id" :value="task.id">{{ task.title }}</option>
         </select>
       </div>
       <div class="min-w-48 flex-[2]">
-        <label for="timer-description" class="mb-1 block text-xs font-medium text-slate-600">O que você vai fazer</label>
-        <input id="timer-description" v-model="timerForm.description" class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm" />
+        <label for="timer-description" class="field-label">O que você vai fazer</label>
+        <input id="timer-description" v-model="timerForm.description" class="field field-sm w-full" placeholder="Ex.: ajustes no layout da home" />
       </div>
-      <button type="submit" :disabled="!timerForm.project_id" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50" data-test="start-timer">
-        ▶ Iniciar timer
+      <button type="submit" :disabled="!timerForm.project_id" class="btn-success w-full sm:w-auto" data-test="start-timer">
+        <AppIcon name="play" :size="14" :stroke="2.5" />Iniciar timer
       </button>
     </form>
 
     <FormAlert :message="error" />
 
-    <section v-if="sheet" class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <div class="mb-3 flex items-center justify-between">
-        <button type="button" class="rounded px-2 py-1 hover:bg-slate-100" aria-label="Semana anterior" @click="week = addDays(sheet.week_start, -7)">‹</button>
-        <p class="text-sm font-medium">Semana de {{ label(sheet.days[0]!) }} a {{ label(sheet.days[6]!) }}</p>
-        <button type="button" class="rounded px-2 py-1 hover:bg-slate-100" aria-label="Próxima semana" @click="week = addDays(sheet.week_start, 7)">›</button>
+    <div v-if="sheet" class="grid gap-4 sm:grid-cols-3">
+      <StatCard icon="clock" label="Total da semana" :value="`${formatMinutes(sheet.totals.total)} h`" />
+      <StatCard icon="checkCircle" label="Cobráveis" :value="`${formatMinutes(sheet.totals.billable_minutes)} h`" />
+      <StatCard icon="wallet" label="Valor cobrável" :value="money(sheet.totals.amount)" />
+    </div>
+
+    <section v-if="sheet" class="card overflow-hidden">
+      <div class="card-header">
+        <button type="button" class="btn-ghost btn-sm" aria-label="Semana anterior" @click="week = addDays(sheet.week_start, -7)"><AppIcon name="chevronLeft" :size="16" /></button>
+        <p class="flex items-center gap-2 text-sm font-medium"><AppIcon name="calendar" :size="16" class="text-fg-muted" />Semana de {{ label(sheet.days[0]!) }} a {{ label(sheet.days[6]!) }}</p>
+        <button type="button" class="btn-ghost btn-sm" aria-label="Próxima semana" @click="week = addDays(sheet.week_start, 7)"><AppIcon name="chevronRight" :size="16" /></button>
       </div>
       <div class="overflow-x-auto">
-        <table class="w-full min-w-[720px] text-sm" data-test="week-grid">
+        <table class="table-clean min-w-[760px]" data-test="week-grid">
           <thead>
-            <tr class="border-b border-slate-200 text-slate-500">
-              <th class="py-2 text-left font-medium">Projeto / tarefa</th>
-              <th v-for="(day, i) in sheet.days" :key="day" class="w-16 py-2 text-center font-medium">
-                <button v-if="isMine" type="button" class="hover:text-brand-600" :title="`Lançar horas em ${label(day)}`" @click="modal = { entry: null, date: day }">
-                  {{ weekdays[i] }}<br />{{ label(day) }}
+            <tr>
+              <th>Projeto / tarefa</th>
+              <th v-for="(day, i) in sheet.days" :key="day" class="w-16 !px-2 text-center">
+                <button v-if="isMine" type="button" class="leading-tight hover:text-brand-300" :title="`Lançar horas em ${label(day)}`" @click="modal = { entry: null, date: day }">
+                  {{ weekdays[i] }}<br /><span class="text-fg-subtle">{{ label(day) }}</span>
                 </button>
-                <template v-else>{{ weekdays[i] }}<br />{{ label(day) }}</template>
+                <template v-else>{{ weekdays[i] }}<br /><span class="text-fg-subtle">{{ label(day) }}</span></template>
               </th>
-              <th class="w-20 py-2 text-right font-medium">Total</th>
+              <th class="w-20 text-right">Total</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="sheet.rows.length === 0">
-              <td :colspan="9" class="py-6 text-center text-slate-500">Nenhuma hora lançada nesta semana.</td>
+              <td :colspan="9" class="py-8 text-center text-fg-muted">Nenhuma hora lançada nesta semana.</td>
             </tr>
-            <tr v-for="row in sheet.rows" :key="row.project.id + (row.task?.id ?? '')" class="border-b border-slate-100">
-              <td class="py-2">
-                <p class="font-medium">{{ row.project.name }}</p>
-                <p class="text-xs text-slate-500">{{ row.task?.title ?? 'Sem tarefa' }}</p>
+            <tr v-for="row in sheet.rows" :key="row.project.id + (row.task?.id ?? '')">
+              <td>
+                <p class="font-medium text-fg">{{ row.project.name }}</p>
+                <p class="text-xs text-fg-muted">{{ row.task?.title ?? 'Sem tarefa' }}</p>
               </td>
-              <td v-for="(minutes, i) in row.minutes" :key="i" class="py-2 text-center tabular-nums" :class="minutes ? '' : 'text-slate-300'">
-                {{ minutes ? formatMinutes(minutes) : '–' }}
+              <td v-for="(minutes, i) in row.minutes" :key="i" class="!px-2 text-center tabular-nums" :class="minutes ? 'text-fg' : 'text-fg-subtle'">
+                <span :class="minutes ? 'rounded-md bg-brand-500/10 px-1.5 py-0.5 text-brand-200' : ''">{{ minutes ? formatMinutes(minutes) : '–' }}</span>
               </td>
-              <td class="py-2 text-right font-semibold tabular-nums">{{ formatMinutes(row.total) }}</td>
+              <td class="text-right font-semibold tabular-nums">{{ formatMinutes(row.total) }}</td>
             </tr>
           </tbody>
-          <tfoot>
-            <tr class="font-semibold">
-              <td class="py-2">Total</td>
-              <td v-for="(minutes, i) in sheet.totals.minutes" :key="i" class="py-2 text-center tabular-nums">{{ formatMinutes(minutes) }}</td>
-              <td class="py-2 text-right tabular-nums" data-test="week-total">{{ formatMinutes(sheet.totals.total) }}</td>
+          <tfoot class="border-t border-line bg-surface-2/60 font-semibold">
+            <tr>
+              <td class="px-5 py-3">Total</td>
+              <td v-for="(minutes, i) in sheet.totals.minutes" :key="i" class="px-2 py-3 text-center tabular-nums">{{ formatMinutes(minutes) }}</td>
+              <td class="px-5 py-3 text-right tabular-nums" data-test="week-total">{{ formatMinutes(sheet.totals.total) }}</td>
             </tr>
           </tfoot>
         </table>
       </div>
-      <p class="mt-2 text-right text-sm text-slate-600">
-        Cobráveis: {{ formatMinutes(sheet.totals.billable_minutes) }} · <strong>{{ money(sheet.totals.amount) }}</strong>
-      </p>
     </section>
 
-    <section class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <h2 class="font-semibold">Apontamentos da semana</h2>
-        <div v-if="canApprove && selected.size" class="flex gap-3 text-sm">
-          <button type="button" class="font-semibold text-emerald-700 hover:underline" data-test="approve" @click="review('approved')">Aprovar ({{ selected.size }})</button>
-          <button type="button" class="font-semibold text-red-600 hover:underline" @click="review('rejected')">Recusar</button>
+    <section class="card overflow-hidden">
+      <div class="card-header">
+        <h2 class="card-title">Apontamentos da semana</h2>
+        <div v-if="canApprove && selected.size" class="flex gap-2">
+          <button type="button" class="btn-success btn-sm" data-test="approve" @click="review('approved')"><AppIcon name="check" :size="14" />Aprovar ({{ selected.size }})</button>
+          <button type="button" class="btn-danger btn-sm" @click="review('rejected')">Recusar</button>
         </div>
       </div>
-      <ul class="divide-y divide-slate-100 text-sm" data-test="entries">
-        <li v-for="entry in entries" :key="entry.id" class="flex flex-wrap items-center gap-3 py-2">
+      <EmptyState v-if="entries.length === 0" icon="clock" title="Nenhum apontamento nesta semana." />
+      <ul class="list-rows text-sm" data-test="entries">
+        <li v-for="entry in entries" :key="entry.id" class="flex flex-wrap items-center gap-3 px-5 py-3 hover:bg-surface-2/50">
           <input
             v-if="canApprove"
             type="checkbox"
-            class="h-4 w-4 accent-brand-600"
+            class="h-4 w-4"
             :disabled="!reviewable.includes(entry)"
             :checked="selected.has(entry.id)"
             :aria-label="`Selecionar ${entry.description ?? entry.project?.name}`"
             @change="toggle(entry.id)"
           />
-          <span class="w-24 text-slate-500">{{ new Date(entry.started_at).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }) }}</span>
+          <span class="w-24 text-xs text-fg-muted capitalize">{{ new Date(entry.started_at).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }) }}</span>
           <div class="min-w-48 flex-1">
-            <p class="font-medium">{{ entry.description || entry.task?.title || entry.project?.name }}</p>
-            <p class="text-xs text-slate-500">
+            <p class="font-medium text-fg">{{ entry.description || entry.task?.title || entry.project?.name }}</p>
+            <p class="text-xs text-fg-muted">
               {{ entry.project?.name }}<template v-if="entry.task"> · {{ entry.task.title }}</template>
               <template v-if="!isMine && entry.user"> · {{ entry.user.name }}</template>
             </p>
           </div>
-          <span class="w-14 text-right font-semibold tabular-nums">{{ entry.is_running ? 'rodando' : formatMinutes(entry.duration_minutes) }}</span>
-          <span
-            class="rounded px-1.5 py-0.5 text-xs"
-            :class="{
-              'bg-amber-50 text-amber-700': entry.status.value === 'pending',
-              'bg-emerald-50 text-emerald-700': entry.status.value === 'approved',
-              'bg-red-50 text-red-700': entry.status.value === 'rejected',
-            }"
-          >
-            {{ entry.status.label }}
+          <span class="w-16 text-right font-semibold tabular-nums">{{ entry.is_running ? 'rodando' : formatMinutes(entry.duration_minutes) }}</span>
+          <StatusBadge :tone="statusTone('timeEntry', entry.status.value)">{{ entry.status.label }}</StatusBadge>
+          <StatusBadge v-if="entry.is_invoiced" tone="neutral" :dot="false">Faturado</StatusBadge>
+          <span v-if="entry.user?.id === auth.user?.id && !entry.is_running && entry.status.value !== 'approved'" class="flex">
+            <button type="button" class="rounded-lg p-1.5 text-fg-muted hover:bg-elevated hover:text-fg" aria-label="Editar" title="Editar" @click="modal = { entry }"><AppIcon name="edit" :size="16" /></button>
+            <button type="button" class="rounded-lg p-1.5 text-fg-muted hover:bg-red-500/10 hover:text-red-300" aria-label="Apagar" title="Apagar" @click="remove(entry)"><AppIcon name="trash" :size="16" /></button>
           </span>
-          <span v-if="entry.is_invoiced" class="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">Faturado</span>
-          <template v-if="entry.user?.id === auth.user?.id && !entry.is_running && entry.status.value !== 'approved'">
-            <button type="button" class="text-brand-600 hover:underline" @click="modal = { entry }">Editar</button>
-            <button type="button" class="text-red-600 hover:underline" @click="remove(entry)">Apagar</button>
-          </template>
         </li>
       </ul>
     </section>

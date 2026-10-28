@@ -29,17 +29,17 @@ onMounted(async () => {
 <template>
   <BaseModal title="Faturar contrato" @close="emit('close')">
     <form class="space-y-4" novalidate @submit.prevent="submit">
-      <p class="text-sm text-slate-600">Cobre o contrato inteiro ou uma parcela, como 50% na entrada.</p>
+      <p class="text-sm text-fg-muted">Cobre o contrato inteiro ou uma parcela, como 50% na entrada.</p>
       <FormAlert v-if="Object.keys(save.fieldErrors.value).length === 0" :message="save.message.value" />
       <div>
-        <label for="contract-select" class="mb-1 block text-sm font-medium text-slate-700">Contrato</label>
-        <select id="contract-select" v-model="form.contract_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        <label for="contract-select" class="field-label">Contrato</label>
+        <select id="contract-select" v-model="form.contract_id" class="field w-full">
           <option value="" disabled>Escolha o contrato vigente</option>
           <option v-for="contract in contracts" :key="contract.id" :value="contract.id">
             {{ contract.number }} · {{ contract.title }} ({{ formatMoney(contract.total) }})
           </option>
         </select>
-        <p v-if="save.fieldErrors.value.contract_id" class="mt-1 text-xs text-red-600">{{ save.fieldErrors.value.contract_id }}</p>
+        <p v-if="save.fieldErrors.value.contract_id" class="mt-1 text-xs text-red-400">{{ save.fieldErrors.value.contract_id }}</p>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <BaseInput id="contract-percent" v-model="form.percent" label="Percentual (%)" :error="save.fieldErrors.value.percent" />

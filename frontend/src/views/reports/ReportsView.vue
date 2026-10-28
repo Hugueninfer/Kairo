@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import StatCard from '@/components/ui/StatCard.vue'
 import { formatMoney } from '@/composables/money'
 import { formatMinutes, isoDate } from '@/composables/time'
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -34,6 +38,10 @@ let request = 0
 
 const money = (value: string) => formatMoney(value, company.current?.currency)
 const column = computed(() => groups.find((group) => group.value === filters.group)?.column ?? '')
+const billableShare = computed(() => {
+  const totals = report.value?.totals
+  return totals && totals.minutes > 0 ? Math.round((totals.billable_minutes / totals.minutes) * 100) : 0
+})
 const maxMinutes = computed(() => Math.max(...(report.value?.rows ?? []).map((row) => row.minutes), 0))
 
 function setMonth(offset: number) {
@@ -101,31 +109,27 @@ onBeforeUnmount(() => clearTimeout(timer))
 
 <template>
   <AppLayout wide>
-    <div class="flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 class="text-2xl font-semibold">Relatório de horas</h1>
-        <p class="text-sm text-slate-600">Horas lançadas no período (as recusadas ficam de fora), com o valor das faturáveis.</p>
-      </div>
-      <button
-        type="button"
-        class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
-        :disabled="!report || processing"
-        data-test="download-csv"
-        @click="downloadCsv"
-      >
-        Baixar CSV
-      </button>
-    </div>
+    <PageHeader
+      title="Relatório de horas"
+      subtitle="Horas lançadas no período (as recusadas ficam de fora), com o valor das faturáveis."
+      :breadcrumbs="[{ label: 'Análise' }, { label: 'Relatórios' }]"
+    >
+      <template #actions>
+        <button type="button" class="btn-secondary" :disabled="!report || processing" data-test="download-csv" @click="downloadCsv">
+          <AppIcon name="download" :size="16" />Baixar CSV
+        </button>
+      </template>
+    </PageHeader>
 
-    <div class="flex flex-wrap items-end gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <div class="flex overflow-hidden rounded-lg border border-slate-300" role="tablist" aria-label="Agrupar por">
+    <div class="card flex flex-wrap items-end gap-4 p-4">
+      <div class="flex rounded-lg border border-line bg-surface-2 p-0.5" role="tablist" aria-label="Agrupar por">
         <button
           v-for="group in groups"
           :key="group.value"
           type="button"
           role="tab"
-          class="border-r border-slate-200 px-3 py-1.5 text-sm last:border-r-0"
-          :class="filters.group === group.value ? 'bg-brand-50 font-semibold text-brand-700' : 'hover:bg-slate-50'"
+          class="rounded-md px-3 py-1.5 text-sm transition-colors"
+          :class="filters.group === group.value ? 'bg-elevated font-medium text-fg shadow' : 'text-fg-muted hover:text-fg'"
           :aria-selected="filters.group === group.value"
           :data-group="group.value"
           @click="chooseGroup(group.value)"
@@ -134,57 +138,77 @@ onBeforeUnmount(() => clearTimeout(timer))
         </button>
       </div>
       <label class="text-sm">
-        <span class="mb-1 block text-slate-600">De</span>
-        <input v-model="filters.from" type="date" class="rounded-lg border border-slate-300 px-2 py-1.5" data-test="from" @change="load()" />
+        <span class="field-label">De</span>
+        <input v-model="filters.from" type="date" class="field field-sm" data-test="from" @change="load()" />
       </label>
       <label class="text-sm">
-        <span class="mb-1 block text-slate-600">Até</span>
-        <input v-model="filters.to" type="date" class="rounded-lg border border-slate-300 px-2 py-1.5" data-test="to" @change="load()" />
+        <span class="field-label">Até</span>
+        <input v-model="filters.to" type="date" class="field field-sm" data-test="to" @change="load()" />
       </label>
-      <div class="flex gap-2 text-sm">
-        <button type="button" class="text-brand-600 hover:underline" @click="setMonth(0)">Este mês</button>
-        <button type="button" class="text-brand-600 hover:underline" @click="setMonth(-1)">Mês passado</button>
+      <div class="flex gap-1">
+        <button type="button" class="btn-ghost btn-sm" @click="setMonth(0)">Este mês</button>
+        <button type="button" class="btn-ghost btn-sm" @click="setMonth(-1)">Mês passado</button>
       </div>
-      <span v-if="processing" class="ml-auto text-sm text-slate-500" data-test="processing">Calculando…</span>
+      <span v-if="processing" class="ml-auto flex items-center gap-2 text-sm text-fg-muted" data-test="processing">
+        <AppIcon name="refresh" :size="15" class="animate-spin" /> Calculando…
+      </span>
     </div>
 
     <FormAlert :message="error" />
 
-    <section v-if="report" class="overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-slate-200" :class="{ 'opacity-60': processing }">
-      <table class="w-full text-sm" data-test="report">
-        <thead class="border-b border-slate-200 text-left text-slate-500">
-          <tr>
-            <th class="px-4 py-3 font-medium">{{ column }}</th>
-            <th class="w-1/3 px-4 py-3 font-medium"><span class="sr-only">Proporção das horas</span></th>
-            <th class="px-4 py-3 text-right font-medium">Horas</th>
-            <th class="px-4 py-3 text-right font-medium">Faturáveis</th>
-            <th class="px-4 py-3 text-right font-medium">Valor</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100">
-          <tr v-for="row in report.rows" :key="row.key || row.label">
-            <td class="px-4 py-2.5 font-medium">{{ row.label }}</td>
-            <td class="px-4 py-2.5">
-              <div class="h-2 rounded-full bg-brand-500" :style="{ width: `${maxMinutes ? (row.minutes / maxMinutes) * 100 : 0}%` }" />
-            </td>
-            <td class="px-4 py-2.5 text-right tabular-nums">{{ formatMinutes(row.minutes) }}</td>
-            <td class="px-4 py-2.5 text-right tabular-nums">{{ formatMinutes(row.billable_minutes) }}</td>
-            <td class="px-4 py-2.5 text-right tabular-nums">{{ money(row.amount) }}</td>
-          </tr>
-          <tr v-if="report.rows.length === 0">
-            <td colspan="5" class="px-4 py-8 text-center text-slate-500">Nenhuma hora lançada no período.</td>
-          </tr>
-        </tbody>
-        <tfoot v-if="report.rows.length" class="border-t border-slate-200 font-semibold">
-          <tr>
-            <td class="px-4 py-3">Total</td>
-            <td />
-            <td class="px-4 py-3 text-right tabular-nums" data-test="total-hours">{{ formatMinutes(report.totals.minutes) }}</td>
-            <td class="px-4 py-3 text-right tabular-nums">{{ formatMinutes(report.totals.billable_minutes) }}</td>
-            <td class="px-4 py-3 text-right tabular-nums">{{ money(report.totals.amount) }}</td>
-          </tr>
-        </tfoot>
-      </table>
+    <div v-if="report" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" :class="{ 'opacity-60': processing }">
+      <StatCard icon="clock" label="Horas no período" :value="formatMinutes(report.totals.minutes)" />
+      <StatCard icon="checkCircle" label="Horas faturáveis" :value="formatMinutes(report.totals.billable_minutes)" :badge="{ text: `${billableShare}%`, tone: billableShare >= 70 ? 'green' : 'neutral' }" />
+      <StatCard icon="wallet" label="Valor faturável" :value="money(report.totals.amount)" />
+      <StatCard icon="layers" :label="`Linhas (${column.toLowerCase()})`" :value="String(report.rows.length)" />
+    </div>
+
+    <section v-if="report" class="card overflow-hidden" :class="{ 'opacity-60': processing }">
+      <div class="card-header">
+        <h2 class="card-title">Por {{ column.toLowerCase() }}</h2>
+        <span class="text-xs text-fg-muted">{{ new Date(`${report.from}T12:00:00`).toLocaleDateString('pt-BR') }} a {{ new Date(`${report.to}T12:00:00`).toLocaleDateString('pt-BR') }}</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="table-clean" data-test="report">
+          <thead>
+            <tr>
+              <th>{{ column }}</th>
+              <th class="hidden w-1/3 md:table-cell"><span class="sr-only">Proporção das horas</span></th>
+              <th class="text-right">Horas</th>
+              <th class="text-right">Faturáveis</th>
+              <th class="text-right">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in report.rows" :key="row.key || row.label">
+              <td class="font-medium text-fg">{{ row.label }}</td>
+              <td class="hidden md:table-cell">
+                <div class="flex items-center gap-3">
+                  <div class="h-1.5 flex-1 rounded-full bg-elevated">
+                    <div class="h-1.5 rounded-full bg-brand-500" :style="{ width: `${maxMinutes ? (row.minutes / maxMinutes) * 100 : 0}%` }" />
+                  </div>
+                  <span class="w-10 text-right text-xs text-fg-muted tabular-nums">{{ report.totals.minutes ? Math.round((row.minutes / report.totals.minutes) * 100) : 0 }}%</span>
+                </div>
+              </td>
+              <td class="text-right tabular-nums">{{ formatMinutes(row.minutes) }}</td>
+              <td class="text-right text-fg-muted tabular-nums">{{ formatMinutes(row.billable_minutes) }}</td>
+              <td class="text-right font-medium whitespace-nowrap tabular-nums">{{ money(row.amount) }}</td>
+            </tr>
+            <tr v-if="report.rows.length === 0">
+              <td colspan="5"><EmptyState icon="chart" title="Nenhuma hora lançada no período." /></td>
+            </tr>
+          </tbody>
+          <tfoot v-if="report.rows.length" class="border-t border-line bg-surface-2/60 font-semibold">
+            <tr>
+              <td class="px-5 py-3">Total</td>
+              <td class="hidden md:table-cell" />
+              <td class="px-5 py-3 text-right tabular-nums" data-test="total-hours">{{ formatMinutes(report.totals.minutes) }}</td>
+              <td class="px-5 py-3 text-right tabular-nums">{{ formatMinutes(report.totals.billable_minutes) }}</td>
+              <td class="px-5 py-3 text-right whitespace-nowrap tabular-nums">{{ money(report.totals.amount) }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     </section>
   </AppLayout>
 </template>

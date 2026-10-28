@@ -57,16 +57,16 @@ onMounted(loadProjects)
     <form class="space-y-4" novalidate @submit.prevent="submit">
       <FormAlert v-if="Object.keys(save.fieldErrors.value).length === 0" :message="save.message.value" />
       <div>
-        <label for="entry-project" class="mb-1 block text-sm font-medium text-slate-700">Projeto</label>
-        <select id="entry-project" v-model="form.project_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" @change="form.task_id = ''">
+        <label for="entry-project" class="field-label">Projeto</label>
+        <select id="entry-project" v-model="form.project_id" class="field w-full" @change="form.task_id = ''">
           <option value="" disabled>Escolha um projeto</option>
           <option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option>
         </select>
-        <p v-if="save.fieldErrors.value.project_id" class="mt-1 text-xs text-red-600">{{ save.fieldErrors.value.project_id }}</p>
+        <p v-if="save.fieldErrors.value.project_id" class="mt-1 text-xs text-red-400">{{ save.fieldErrors.value.project_id }}</p>
       </div>
       <div>
-        <label for="entry-task" class="mb-1 block text-sm font-medium text-slate-700">Tarefa (opcional)</label>
-        <select id="entry-task" v-model="form.task_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        <label for="entry-task" class="field-label">Tarefa (opcional)</label>
+        <select id="entry-task" v-model="form.task_id" class="field w-full">
           <option value="">Sem tarefa</option>
           <option v-for="task in tasks" :key="task.id" :value="task.id">{{ task.title }}</option>
         </select>

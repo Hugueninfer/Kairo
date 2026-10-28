@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
+import UiPagination from '@/components/ui/UiPagination.vue'
+import UserAvatar from '@/components/ui/UserAvatar.vue'
 import { useApiForm } from '@/composables/useApiForm'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { clientsApi } from '@/services/clients'
@@ -89,54 +94,76 @@ onMounted(load)
 
 <template>
   <AppLayout>
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-2xl font-semibold">Clientes</h1>
-      <div v-if="canManage" class="w-40">
-        <BaseButton type="button" @click="open(null)">Novo cliente</BaseButton>
-      </div>
-    </div>
-
-    <input
-      v-model="search"
-      type="search"
-      placeholder="Buscar por nome, e-mail ou documento"
-      aria-label="Buscar clientes"
-      class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-      data-test="client-search"
-    />
+    <PageHeader title="Clientes" subtitle="Quem você atende, com contato e projetos." :breadcrumbs="[{ label: 'Comercial' }, { label: 'Clientes' }]">
+      <template #actions>
+        <BaseButton v-if="canManage" type="button" inline @click="open(null)"><AppIcon name="plus" :size="16" />Novo cliente</BaseButton>
+      </template>
+    </PageHeader>
 
     <FormAlert :message="loadError" />
 
-    <section class="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-      <p v-if="page && page.data.length === 0" class="p-6 text-sm text-slate-500">Nenhum cliente encontrado.</p>
-      <ul class="divide-y divide-slate-100" data-test="clients">
-        <li v-for="client in page?.data ?? []" :key="client.id" class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 text-sm">
-          <div>
-            <p class="font-medium">{{ client.name }}</p>
-            <p class="text-slate-500">
-              {{ [client.email, client.phone].filter(Boolean).join(' · ') || 'Sem contato' }}
-            </p>
-          </div>
-          <div class="flex items-center gap-4">
-            <RouterLink :to="{ name: 'projects', query: { cliente: client.id } }" class="text-slate-600 hover:text-brand-600">
-              {{ client.projects_count ?? 0 }} {{ client.projects_count === 1 ? 'projeto' : 'projetos' }}
-            </RouterLink>
-            <template v-if="canManage">
-              <button type="button" class="text-brand-600 hover:underline" @click="open(client)">Editar</button>
-              <button type="button" class="text-red-600 hover:underline" @click="remove(client)">Apagar</button>
-            </template>
-          </div>
-        </li>
-      </ul>
-    </section>
+    <section class="card overflow-hidden">
+      <div class="card-header">
+        <h2 class="card-title">
+          Todos os clientes
+          <span v-if="page" class="ml-1.5 text-sm font-normal text-fg-muted">{{ page.meta.total }}</span>
+        </h2>
+        <div class="relative w-full sm:w-72">
+          <AppIcon name="search" :size="16" class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-subtle" />
+          <input
+            v-model="search"
+            type="search"
+            placeholder="Buscar por nome, e-mail ou documento"
+            aria-label="Buscar clientes"
+            class="field field-sm w-full pl-9"
+            data-test="client-search"
+          />
+        </div>
+      </div>
 
-    <nav v-if="page && page.meta.last_page > 1" class="flex items-center justify-center gap-4 text-sm">
-      <button type="button" :disabled="page.meta.current_page === 1" class="disabled:opacity-40" @click="goTo(page.meta.current_page - 1)">Anterior</button>
-      <span>Página {{ page.meta.current_page }} de {{ page.meta.last_page }}</span>
-      <button type="button" :disabled="page.meta.current_page === page.meta.last_page" class="disabled:opacity-40" @click="goTo(page.meta.current_page + 1)">
-        Próxima
-      </button>
-    </nav>
+      <EmptyState v-if="page && page.data.length === 0" icon="users" title="Nenhum cliente encontrado." />
+      <div v-else class="overflow-x-auto">
+        <table class="table-clean">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th class="hidden md:table-cell">Documento</th>
+              <th>Projetos</th>
+              <th v-if="canManage" class="text-right"><span class="sr-only">Ações</span></th>
+            </tr>
+          </thead>
+          <tbody data-test="clients">
+            <tr v-for="client in page?.data ?? []" :key="client.id">
+              <td class="min-w-60">
+                <div class="flex items-center gap-3">
+                  <UserAvatar :name="client.name" :size="34" />
+                  <div class="min-w-0">
+                    <p class="truncate font-medium text-fg">{{ client.name }}</p>
+                    <p class="truncate text-xs text-fg-muted">{{ [client.email, client.phone].filter(Boolean).join(' · ') || 'Sem contato' }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="hidden text-fg-muted md:table-cell">{{ client.document || '—' }}</td>
+              <td>
+                <RouterLink :to="{ name: 'projects', query: { cliente: client.id } }" class="inline-flex items-center gap-1.5 text-fg-soft hover:text-brand-300">
+                  <AppIcon name="folder" :size="15" class="text-fg-subtle" />
+                  {{ client.projects_count ?? 0 }} {{ client.projects_count === 1 ? 'projeto' : 'projetos' }}
+                </RouterLink>
+              </td>
+              <td v-if="canManage" class="text-right whitespace-nowrap">
+                <button type="button" class="rounded-lg p-1.5 text-fg-muted hover:bg-elevated hover:text-fg" :aria-label="`Editar ${client.name}`" title="Editar" @click="open(client)">
+                  <AppIcon name="edit" :size="16" />
+                </button>
+                <button type="button" class="rounded-lg p-1.5 text-fg-muted hover:bg-red-500/10 hover:text-red-300" :aria-label="`Apagar ${client.name}`" title="Apagar" @click="remove(client)">
+                  <AppIcon name="trash" :size="16" />
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <UiPagination v-if="page && page.meta.last_page > 1" :current="page.meta.current_page" :last="page.meta.last_page" @go="goTo" />
+    </section>
 
     <BaseModal v-if="showForm" :title="editing ? 'Editar cliente' : 'Novo cliente'" @close="showForm = false">
       <form class="space-y-4" novalidate @submit.prevent="submit">
@@ -148,8 +175,8 @@ onMounted(load)
         </div>
         <BaseInput id="client-document" v-model="form.document" label="CPF ou CNPJ" :error="save.fieldErrors.value.document" />
         <div>
-          <label for="client-notes" class="mb-1 block text-sm font-medium text-slate-700">Observações</label>
-          <textarea id="client-notes" v-model="form.notes" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <label for="client-notes" class="field-label">Observações</label>
+          <textarea id="client-notes" v-model="form.notes" rows="3" class="field w-full" />
         </div>
         <BaseButton :loading="save.submitting.value">Salvar</BaseButton>
       </form>

@@ -3,6 +3,9 @@ import { onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import { useRoute } from 'vue-router'
 import BoardCanvas from '@/components/boards/BoardCanvas.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
+import AppLogo from '@/components/ui/AppLogo.vue'
+import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { useBoardDocument, type BoardDocument } from '@/composables/boardDocument'
 import { publicBoardApi } from '@/services/boards'
 import { toApiError } from '@/services/http'
@@ -43,11 +46,15 @@ onBeforeUnmount(() => clearInterval(timer))
 </script>
 
 <template>
-  <div class="flex h-screen flex-col gap-3 bg-slate-50 p-4">
-    <header v-if="board" class="flex flex-wrap items-baseline gap-x-3">
-      <h1 class="text-xl font-semibold" data-test="public-board-title">{{ board.title }}</h1>
-      <span class="text-sm text-slate-500">{{ board.company.name }} · atualizado em {{ updatedAt(board.updated_at) }}</span>
-      <span class="ml-auto rounded bg-slate-200 px-2 py-0.5 text-xs text-slate-700">Somente leitura</span>
+  <div class="flex h-dvh flex-col gap-3 p-4">
+    <header v-if="board" class="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <AppLogo :height="18" />
+      <span class="hidden h-5 w-px bg-line sm:block" aria-hidden="true" />
+      <div class="min-w-0">
+        <h1 class="truncate text-lg font-semibold" data-test="public-board-title">{{ board.title }}</h1>
+        <p class="text-xs text-fg-muted">{{ board.company.name }} · atualizado em {{ updatedAt(board.updated_at) }}</p>
+      </div>
+      <StatusBadge tone="neutral" :dot="false" class="ml-auto"><AppIcon name="eye" :size="12" />Somente leitura</StatusBadge>
     </header>
     <FormAlert :message="error && !board ? 'Este link não está mais disponível. Peça um novo a quem compartilhou.' : error" />
     <BoardCanvas v-if="doc" class="min-h-0 flex-1" :doc="doc" :editable="false" />

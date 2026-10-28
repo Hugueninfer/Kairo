@@ -6,6 +6,8 @@ import BoardCanvas from '@/components/boards/BoardCanvas.vue'
 import BoardVersionsPanel from '@/components/boards/BoardVersionsPanel.vue'
 import ShareBoardModal from '@/components/boards/ShareBoardModal.vue'
 import FormAlert from '@/components/ui/FormAlert.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
+import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { useBoardDocument, type BoardDocument } from '@/composables/boardDocument'
 import { useAutosave } from '@/composables/useAutosave'
 import { memberColor, useBoardRealtime, type BoardChangedEvent } from '@/composables/useBoardRealtime'
@@ -174,65 +176,65 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnsaved))
 
 <template>
   <AppLayout full>
-    <div class="flex h-[calc(100vh-6.5rem)] flex-col gap-3">
+    <div class="flex h-[calc(100dvh-6rem)] min-h-[480px] flex-col gap-3">
       <div class="flex flex-wrap items-center gap-3">
-        <RouterLink :to="{ name: 'boards' }" class="text-sm text-brand-600 hover:underline">‹ Boards</RouterLink>
+        <RouterLink :to="{ name: 'boards' }" class="btn-ghost btn-sm" aria-label="Voltar para os boards"><AppIcon name="arrowLeft" :size="16" />Boards</RouterLink>
         <input
           v-if="board"
           v-model="title"
           :disabled="!editable"
           maxlength="120"
           aria-label="Nome do board"
-          class="min-w-64 rounded-lg border border-transparent bg-transparent px-2 py-1 text-xl font-semibold hover:border-slate-300 focus:border-slate-300 focus:bg-white disabled:hover:border-transparent"
+          class="min-w-0 flex-1 rounded-lg border border-transparent !bg-transparent px-2 py-1 text-xl font-semibold outline-none hover:border-line-strong focus:border-brand-500 sm:max-w-md sm:min-w-64 sm:flex-none disabled:hover:border-transparent"
           data-test="board-title"
           @change="renameBoard"
           @keydown.enter="($event.target as HTMLInputElement).blur()"
         />
-        <RouterLink v-if="board?.project" :to="{ name: 'project-board', params: { id: board.project.id } }" class="text-sm text-slate-500 hover:text-brand-600">
+        <RouterLink v-if="board?.project" :to="{ name: 'project-board', params: { id: board.project.id } }" class="text-sm text-fg-muted hover:text-brand-300">
           Projeto {{ board.project.name }}
         </RouterLink>
-        <span v-if="!editable" class="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600">Somente leitura</span>
+        <StatusBadge v-if="!editable" tone="neutral" :dot="false"><AppIcon name="lock" :size="12" />Somente leitura</StatusBadge>
 
         <div class="ml-auto flex items-center gap-3">
           <div v-if="others.length" class="flex -space-x-2" data-test="presence">
             <span
               v-for="member in others.slice(0, 5)"
               :key="member.id"
-              class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white ring-2 ring-white"
+              class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white ring-2 ring-surface"
               :style="{ background: memberColor(member.id) }"
               :title="`${member.name} está no board`"
               >{{ initials(member.name) }}</span
             >
-            <span v-if="others.length > 5" class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700 ring-2 ring-white"
+            <span v-if="others.length > 5" class="flex h-8 w-8 items-center justify-center rounded-full bg-line-strong text-xs font-semibold text-fg-soft ring-2 ring-surface"
               >+{{ others.length - 5 }}</span
             >
           </div>
-          <span v-if="live.status.value === 'offline'" class="text-xs text-amber-700" data-test="realtime-offline">Sem conexão ao vivo</span>
+          <span v-if="live.status.value === 'offline'" class="text-xs text-amber-400" data-test="realtime-offline">Sem conexão ao vivo</span>
           <span
             v-if="editable && doc"
             class="text-sm"
-            :class="autosave.state.value === 'error' ? 'text-red-600' : 'text-slate-500'"
+            :class="autosave.state.value === 'error' ? 'text-red-400' : 'text-fg-muted'"
             data-test="save-state"
             >{{ saveLabel }}</span
           >
           <button
             v-if="board"
             type="button"
-            class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
+            class="btn-secondary"
             :aria-pressed="showVersions"
             data-test="open-versions"
             @click="showVersions ? closeVersions() : (showVersions = true)"
           >
-            Versões
+            <AppIcon name="history" :size="16" /><span class="hidden sm:inline">Versões</span>
           </button>
           <button
             v-if="board && editable"
             type="button"
-            class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
+            class="btn-secondary"
             data-test="open-share"
             @click="showShare = true"
           >
-            {{ board.share_url ? 'Compartilhado' : 'Compartilhar' }}
+            <AppIcon name="link" :size="16" /><span class="hidden sm:inline">{{ board.share_url ? 'Compartilhado' : 'Compartilhar' }}</span>
           </button>
         </div>
       </div>
@@ -240,7 +242,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnsaved))
       <FormAlert :message="notice" variant="success" />
       <div
         v-if="preview"
-        class="flex flex-wrap items-center gap-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900 ring-1 ring-amber-200"
+        class="flex flex-wrap items-center gap-3 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-200 ring-1 ring-amber-500/30"
         data-test="preview-banner"
       >
         <span>
@@ -249,7 +251,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnsaved))
         <button
           v-if="editable"
           type="button"
-          class="rounded-lg bg-amber-600 px-3 py-1 font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
+          class="btn btn-sm bg-amber-500 font-semibold text-zinc-950 hover:bg-amber-400"
           :disabled="restoring"
           data-test="restore-version"
           @click="restorePreview"

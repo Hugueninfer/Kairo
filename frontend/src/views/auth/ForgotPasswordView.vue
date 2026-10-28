@@ -29,7 +29,7 @@ async function onSubmit() {
     </form>
 
     <template #footer>
-      <RouterLink to="/login" class="font-medium text-brand-600 hover:underline">Voltar para o login</RouterLink>
+      <RouterLink to="/login" class="link">Voltar para o login</RouterLink>
     </template>
   </AuthLayout>
 </template>

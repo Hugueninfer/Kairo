@@ -72,10 +72,10 @@ defineExpose({ load })
 </script>
 
 <template>
-  <aside class="flex w-80 shrink-0 flex-col gap-3 overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200" data-test="versions-panel">
+  <aside class="card flex w-80 shrink-0 flex-col gap-3 overflow-hidden p-4" data-test="versions-panel">
     <div class="flex items-center justify-between">
-      <h2 class="font-semibold">Histórico de versões</h2>
-      <button type="button" class="text-slate-400 hover:text-slate-600" aria-label="Fechar histórico" @click="emit('close')">✕</button>
+      <h2 class="card-title">Histórico de versões</h2>
+      <button type="button" class="text-fg-subtle hover:text-fg" aria-label="Fechar histórico" @click="emit('close')">✕</button>
     </div>
     <form v-if="editable" class="flex gap-2" @submit.prevent="save">
       <input
@@ -83,34 +83,34 @@ defineExpose({ load })
         maxlength="80"
         placeholder="Nome (opcional)"
         aria-label="Nome da versão"
-        class="min-w-0 flex-1 rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+        class="field field-sm min-w-0 flex-1"
       />
-      <button type="submit" :disabled="saving" class="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60" data-test="save-version">
+      <button type="submit" :disabled="saving" class="btn-primary" data-test="save-version">
         Salvar versão
       </button>
     </form>
     <FormAlert :message="notice" variant="success" />
     <FormAlert :message="error" />
-    <p class="text-xs text-slate-500">O Kairo também guarda uma versão automática a cada 10 minutos de edição.</p>
+    <p class="text-xs text-fg-muted">O Kairo também guarda uma versão automática a cada 10 minutos de edição.</p>
     <ul class="-mx-2 min-h-0 flex-1 space-y-1 overflow-y-auto px-2">
       <li v-for="version in versions" :key="version.id">
         <button
           type="button"
-          class="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50"
-          :class="previewing === version.id ? 'bg-brand-50 ring-1 ring-brand-200' : ''"
+          class="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-surface-2"
+          :class="previewing === version.id ? 'bg-brand-500/10 ring-1 ring-brand-500/40' : ''"
           :disabled="opening !== null"
           data-test="version"
           @click="open(version)"
         >
-          <span class="block font-medium text-slate-800">{{ version.label ?? (version.automatic ? 'Versão automática' : 'Versão salva') }}</span>
-          <span class="block text-xs text-slate-500">
+          <span class="block font-medium text-fg">{{ version.label ?? (version.automatic ? 'Versão automática' : 'Versão salva') }}</span>
+          <span class="block text-xs text-fg-muted">
             {{ when(version.created_at) }}<template v-if="version.author"> · {{ version.author.name }}</template> · {{ version.element_count }}
             {{ version.element_count === 1 ? 'elemento' : 'elementos' }}
           </span>
         </button>
       </li>
-      <li v-if="!loading && versions.length === 0" class="px-3 py-6 text-center text-sm text-slate-500">Nenhuma versão ainda.</li>
+      <li v-if="!loading && versions.length === 0" class="px-3 py-6 text-center text-sm text-fg-muted">Nenhuma versão ainda.</li>
     </ul>
-    <button v-if="page < lastPage" type="button" class="text-sm text-brand-600 hover:underline" :disabled="loading" @click="load(page + 1)">Carregar mais</button>
+    <button v-if="page < lastPage" type="button" class="link text-sm" :disabled="loading" @click="load(page + 1)">Carregar mais</button>
   </aside>
 </template>

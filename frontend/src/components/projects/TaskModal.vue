@@ -75,25 +75,25 @@ async function remove() {
       <fieldset :disabled="!canEdit" class="space-y-4">
         <BaseInput id="task-title" v-model="form.title" label="Título" :error="save.fieldErrors.value.title" />
         <div>
-          <label for="task-description" class="mb-1 block text-sm font-medium text-slate-700">Descrição</label>
-          <textarea id="task-description" v-model="form.description" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <label for="task-description" class="field-label">Descrição</label>
+          <textarea id="task-description" v-model="form.description" rows="4" class="field w-full" />
         </div>
         <div class="grid gap-4 sm:grid-cols-2">
           <div>
-            <label for="task-status" class="mb-1 block text-sm font-medium text-slate-700">Coluna</label>
-            <select id="task-status" v-model="form.status" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <label for="task-status" class="field-label">Coluna</label>
+            <select id="task-status" v-model="form.status" class="field w-full">
               <option v-for="option in options?.task_statuses ?? []" :key="option.value" :value="option.value">{{ option.label }}</option>
             </select>
           </div>
           <div>
-            <label for="task-priority" class="mb-1 block text-sm font-medium text-slate-700">Prioridade</label>
-            <select id="task-priority" v-model="form.priority" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <label for="task-priority" class="field-label">Prioridade</label>
+            <select id="task-priority" v-model="form.priority" class="field w-full">
               <option v-for="option in options?.task_priorities ?? []" :key="option.value" :value="option.value">{{ option.label }}</option>
             </select>
           </div>
           <div>
-            <label for="task-assignee" class="mb-1 block text-sm font-medium text-slate-700">Responsável</label>
-            <select id="task-assignee" v-model="form.assignee_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <label for="task-assignee" class="field-label">Responsável</label>
+            <select id="task-assignee" v-model="form.assignee_id" class="field w-full">
               <option :value="null">Ninguém</option>
               <option v-for="member in members" :key="member.id" :value="member.id">{{ member.name }}</option>
             </select>
@@ -106,11 +106,11 @@ async function remove() {
         <div class="flex-1">
           <BaseButton :loading="save.submitting.value">Salvar</BaseButton>
         </div>
-        <button v-if="task" type="button" class="text-sm text-red-600 hover:underline" @click="remove">Apagar</button>
+        <button v-if="task" type="button" class="text-sm text-red-400 hover:underline" @click="remove">Apagar</button>
       </div>
-      <div v-if="task && task.status.value !== 'done'" class="flex items-center gap-3 border-t border-slate-100 pt-3 text-sm">
-        <span v-if="timer.running?.task?.id === task.id" class="font-medium text-emerald-700">⏱ Timer rodando nesta tarefa</span>
-        <button v-else type="button" class="font-semibold text-emerald-700 hover:underline" data-test="task-timer" @click="startTimer">
+      <div v-if="task && task.status.value !== 'done'" class="flex items-center gap-3 border-t border-line pt-3 text-sm">
+        <span v-if="timer.running?.task?.id === task.id" class="font-medium text-emerald-400">⏱ Timer rodando nesta tarefa</span>
+        <button v-else type="button" class="font-semibold text-emerald-400 hover:underline" data-test="task-timer" @click="startTimer">
           ▶ Iniciar timer nesta tarefa
         </button>
         <FormAlert :message="timerError" />
